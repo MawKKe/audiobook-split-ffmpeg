@@ -32,6 +32,7 @@ from collections import namedtuple
 #
 #  See --help for usage
 #
+# More information in Github: https://github.com/MawKKe/audiobook-split-ffmpeg
 
 def parseChapters(filename):
     command = [ "ffprobe", '-i', filename, "-v", "error", "-print_format", "json", "-show_chapters"]

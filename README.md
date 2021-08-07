@@ -1,4 +1,4 @@
-# audiobook-split-ffmpeg
+# audiobook-split-ffmpeg.py
 
 Split audiobook file into per-chapter files using chapter metadata and ffmpeg.
 
@@ -60,7 +60,7 @@ the concurrency might not increase the throughput. (We specifically instruct `ff
 re-encoding, so most of the processing work consists of copying the existing encoded audio data from the
 input file to the output file(s) - this kind of processing is more I/O bounded than CPU-bounded).
 
-# Dependencies:
+# Dependencies
 
 - Python 3.5 or newer
 - Obviously you need ffmpeg (and ffprobe) installed.
@@ -81,4 +81,16 @@ There are no 3rd party library dependencies. Everything is accomplished with jus
 
 - The work is parallelized to speed up the processing.
 
+# Licese
+
+Copyright 2018 Markus Holmström (MawKKe)
+
+The works under this repository are licenced under Apache License 2.0.
+See file `LICENCE` for more information.
+
+# Contributing
+
+This project is hosted at https://github.com/MawKKe/audiobook-split-ffmpeg
+
+You are welcome to leave bug reports, fixes and feature requests. Thanks!
 

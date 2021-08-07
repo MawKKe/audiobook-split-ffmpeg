@@ -81,7 +81,7 @@ There are no 3rd party library dependencies. Everything is accomplished with jus
 
 - The work is parallelized to speed up the processing.
 
-# Licese
+# License
 
 Copyright 2018 Markus Holmström (MawKKe)
 

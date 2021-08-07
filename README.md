@@ -27,9 +27,9 @@ Then, running:
     $ python3 audiobook-split-ffmpeg.py --infile mybook.m4b --outdir /tmp/foo
 
 ..produces the following files:
-- /tmp/foo/ch 000 Chapter Zero.m4b
-- /tmp/foo/ch 001 Chapter One.m4b
-- /tmp/foo/ch 002 Chapter Two.m4b
+- `/tmp/foo/ch 000 Chapter Zero.m4b`
+- `/tmp/foo/ch 001 Chapter One.m4b`
+- `/tmp/foo/ch 002 Chapter Two.m4b`
 
 You may then play these files with your preferred application.
 

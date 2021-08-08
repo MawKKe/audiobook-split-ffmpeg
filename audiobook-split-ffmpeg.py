@@ -115,6 +115,13 @@ def main(argv):
 
     args = p.parse_args(argv[1:])
 
+    if not args.use_title and not args.enumerate_files:
+        print("ERROR!")
+        print("Options --no-use-title-as-filename and --no-enumerate-filenames given at the same time.")
+        print("This would cause all output files to have identical names!")
+        print("Remove either option and try again.")
+        return -1
+
     if args.verbose:
         print("args:")
         print(args)

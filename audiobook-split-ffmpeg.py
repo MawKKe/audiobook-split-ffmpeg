@@ -228,7 +228,7 @@ def main(argv):
                     errors += 1
                     proc = result["proc"]
                     print("FAILURE: {0}".format(work_item.outfile))
-                    print("Command: {0}".format(res["cmd"]))
+                    print("Command: {0}".format(result["cmd"]))
                     print("FFMPEG-STDOUT:", proc.stdout)
                     print("FFMPEG-STDERR:", proc.stderr)
                     print("-" * 20)

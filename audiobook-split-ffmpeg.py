@@ -106,7 +106,7 @@ def workitem_to_ffmpeg_cmd(wi):
     return cmd
 
 def main(argv):
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(description="Split an audiobook chapters into files using ffmpeg")
     p.add_argument("--infile", required=True,
             help="Input file")
     p.add_argument("--outdir", required=False,

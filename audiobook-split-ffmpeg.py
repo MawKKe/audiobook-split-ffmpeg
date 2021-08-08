@@ -43,7 +43,7 @@ def sanitize_string(original):
     return ''.join(c for c in original if c not in chr_blacklist)
 
 def parseChapters(filename):
-    command = [ "ffprobe", '-i', filename, "-v", "error", "-print_format", "json", "-show_chapters"]
+    command = ["ffprobe", '-i', filename, "-v", "error", "-print_format", "json", "-show_chapters"]
     try:
         # ffmpeg & ffprobe write output into stderr, except when
         # using -show_XXXX and -print_format. Strange.

@@ -64,7 +64,7 @@ def parseChapters(filename):
 
 
 # Helper type for collecting necessary information about chapter for processing
-WorkItem = namedtuple("WorkItem", ["infile", "outfile", "start", "end", "ch_id", "ch_max", "ch_title"])
+WorkItem = namedtuple("WorkItem", ["infile", "outfile", "start", "end", "ch_num", "ch_max", "ch_title"])
 
 # Build command list from WorkItem. The command list can be directly passed to subprocess.run() or similar.
 def workitem_to_ffmpeg_cmd(wi):
@@ -86,7 +86,7 @@ def workitem_to_ffmpeg_cmd(wi):
         "-n"
     ]
 
-    metadata_track = ["-metadata", "track={}/{}".format(wi.ch_id, wi.ch_max)]
+    metadata_track = ["-metadata", "track={}/{}".format(wi.ch_num, wi.ch_max)]
 
     # TODO how does this handle mangled title values?
     metadata_title = ["-metadata", "title={}".format(wi.ch_title)] if wi.ch_title else []
@@ -157,7 +157,7 @@ def main(argv):
 
     # Compute output filename for chapter 'n' with 'title'.
     def outfile_basename(n, title_maybe):
-        fmt = "ch {ch_num} - {title}.{ext}"
+        fmt = "{ch_num} - {title}.{ext}"
         ch_num = chnum_format(n)
         if args.use_title and title_maybe:
             return fmt.format(ch_num=ch_num, title=title_maybe, ext=fext)
@@ -171,13 +171,14 @@ def main(argv):
 
     def gen_workitems():
         for chapter in chapters:
-            out_base = outfile_basename(chapter["id"], get_title_maybe(chapter))
+            ch_num = chapter["id"] + 1 # chapter numbering starts at zero
+            out_base = outfile_basename(ch_num, get_title_maybe(chapter))
             yield WorkItem(
                 infile   = args.infile,
                 outfile  = os.path.join(outdir, out_base),
                 start    = chapter["start_time"],
                 end      = chapter["end_time"],
-                ch_id    = chapter["id"],
+                ch_num   = ch_num,
                 ch_max   = max_chapter,
                 ch_title = get_title_maybe(chapter)
             )

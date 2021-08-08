@@ -34,6 +34,15 @@ from collections import namedtuple
 #
 # More information in Github: https://github.com/MawKKe/audiobook-split-ffmpeg
 
+# Special characters interpreted specially by most crappy software
+
+chr_blacklist = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|", "\0"]
+
+def sanitize_string(original):
+    if original is None:
+        return None
+    return ''.join(c for c in original if c not in chr_blacklist)
+
 def parseChapters(filename):
     command = [ "ffprobe", '-i', filename, "-v", "error", "-print_format", "json", "-show_chapters"]
     try:
@@ -185,7 +194,7 @@ def main(argv):
     def gen_workitems():
         for chapter in chapters:
             ch_num = chapter["id"] + 1 # chapter numbering starts at zero
-            out_base = outfile_basename(ch_num, get_title_maybe(chapter))
+            out_base = outfile_basename(ch_num, sanitize_string(get_title_maybe(chapter)))
             yield WorkItem(
                 infile   = args.infile,
                 outfile  = os.path.join(outdir, out_base),

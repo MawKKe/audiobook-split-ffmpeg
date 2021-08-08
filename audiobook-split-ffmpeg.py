@@ -102,6 +102,8 @@ def main(argv):
     p.add_argument("--infile", required=True, help="Input file")
     p.add_argument("--concurrency", required=False, default=cpu_count(), help="Number of concurrent processes", type=int)
     p.add_argument("--dry-run", required=False, action='store_true', help="Show actions, do not actually split file")
+    p.add_argument("--no-enumerate-filenames", required=False, dest='enumerate_files', action='store_false',
+            help="Do not include chapter numbers in the output filenames")
     p.add_argument("--no-use-title", "--no-use-title-as-filename", required=False, dest='use_title', action='store_false',
             help="Prevent including chapter title in the filenames (in case it is garbage)")
     p.add_argument("--outdir", required=False,
@@ -157,11 +159,11 @@ def main(argv):
 
     # Compute output filename for chapter 'n' with 'title'.
     def outfile_basename(n, title_maybe):
-        fmt = "{ch_num} - {title}.{ext}"
-        ch_num = chnum_format(n)
-        if args.use_title and title_maybe:
-            return fmt.format(ch_num=ch_num, title=title_maybe, ext=fext)
-        return fmt.format(ch_num=ch_num, title=fbase, ext=fext)
+        title = title_maybe if (args.use_title and title_maybe) else fbase
+        base  = "{title}.{ext}".format(title=title, ext=fext)
+        if args.enumerate_files:
+            return "{0} - {1}".format(chnum_format(n), base)
+        return base
 
     # Chapter to title (string) or None
     def get_title_maybe(ch):

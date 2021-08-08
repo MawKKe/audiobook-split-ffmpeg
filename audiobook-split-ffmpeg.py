@@ -16,7 +16,6 @@
 
 import sys
 import os
-import re
 import subprocess as sub
 import argparse
 import tempfile

@@ -41,15 +41,15 @@ from collections import namedtuple
 
 # Special characters interpreted specially by most crappy software
 
-CHR_BLACKLIST = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|", "\0"]
+_CHR_BLACKLIST = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|", "\0"]
 
-def sanitize_string(original):
+def _sanitize_string(original):
     """
     Filter typical special letters from string
     """
     if original is None:
         return None
-    return ''.join(c for c in original if c not in CHR_BLACKLIST)
+    return ''.join(c for c in original if c not in _CHR_BLACKLIST)
 
 def parse_chapters(filename):
     """
@@ -116,7 +116,7 @@ def workitem_to_ffmpeg_cmd(w_item):
 
     return cmd
 
-def validate_chapter(chap):
+def _validate_chapter(chap):
     """
     Checks that chapter is valid (i.e has valid length)
     """
@@ -129,7 +129,7 @@ def validate_chapter(chap):
     return chap
 
 
-def get_title_maybe(chap):
+def _get_title_maybe(chap):
     """
     Chapter to title (string) or None
     """
@@ -169,7 +169,7 @@ def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenam
         raise RuntimeError("Could not parse chapters")
 
     # Collect all valid chapters into a list
-    chapters = list(filter(None, (validate_chapter(ch) for ch in info["chapters"])))
+    chapters = list(filter(None, (_validate_chapter(ch) for ch in info["chapters"])))
 
     # Find maximum chapter number. Remember + 1 since enumeration starts at zero!
     ch_max = max(chap['id'] + 1 for chap in chapters)
@@ -179,7 +179,7 @@ def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenam
 
     for chapter in chapters:
         # Get cleaned title or None
-        title_maybe = sanitize_string(get_title_maybe(chapter))
+        title_maybe = _sanitize_string(_get_title_maybe(chapter))
 
         ch_num = chapter["id"] + 1
 
@@ -200,7 +200,7 @@ def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenam
             end      = chapter["end_time"],
             ch_num   = ch_num,
             ch_max   = ch_max,
-            ch_title = get_title_maybe(chapter)
+            ch_title = _get_title_maybe(chapter)
         )
 
 
@@ -284,7 +284,7 @@ def process_workitems(work_items, outdir, concurrency=1, verbose=False):
 
         futs = dict(start_all())
         n_jobs = len(futs)
-        stats = wait_for_results(futs, verbose)
+        stats = _wait_for_results(futs, verbose)
 
     print("Total jobs: {n}, Success: {success}, Errors: {error}".format(n=n_jobs, **stats))
 
@@ -295,7 +295,7 @@ def process_workitems(work_items, outdir, concurrency=1, verbose=False):
 
     return 0
 
-def wait_for_results(futs, verbose=False):
+def _wait_for_results(futs, verbose=False):
     """
     Collect ffmpeg processing results and display whether chapter was processed correctly
     """

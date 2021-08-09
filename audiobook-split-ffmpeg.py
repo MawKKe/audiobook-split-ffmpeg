@@ -123,23 +123,24 @@ def main(argv):
                    help="Output directory. If omitted, a random directory under /tmp/ is used")
     p.add_argument("--concurrency", required=False, type=int, default=cpu_count(),
                    help="Number of concurrent ffmpeg worker processes")
-    p.add_argument("--no-enumerate-filenames", required=False, dest='enumerate_files', action='store_false',
-            help="Do not include chapter numbers in the output filenames")
-    p.add_argument("--no-use-title", "--no-use-title-as-filename", required=False, dest='use_title', action='store_false',
-            help="Do not include chapter titles in the output filenames (in case the titles are unusable/garbage)")
+
+    # NOTE: without this mutual exclusion, the output
+    # filenames would be identical between chapters!
+    # In essence, you can give either (or neither), but not both.
+    excl = p.add_mutually_exclusive_group(required=False)
+    excl.add_argument("--no-enumerate-filenames", required=False, dest='enumerate_files',
+                      action='store_false',
+                      help="Do not include chapter numbers in the output filenames")
+    excl.add_argument("--no-use-title", "--no-use-title-as-filename", required=False,
+                      dest='use_title', action='store_false',
+                      help="Do not include chapter titles in the output filenames")
+
     p.add_argument("--dry-run", required=False, action='store_true',
                    help="Show what actions would be taken without taking them")
     p.add_argument("--verbose", required=False, action="store_true",
                    help="Show more output")
 
     args = p.parse_args(argv[1:])
-
-    if not args.use_title and not args.enumerate_files:
-        print("ERROR!")
-        print("Options --no-use-title-as-filename and --no-enumerate-filenames given at the same time.")
-        print("This would cause all output files to have identical names!")
-        print("Remove either option and try again.")
-        return -1
 
     if args.verbose:
         print("args:")

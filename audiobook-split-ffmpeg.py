@@ -22,6 +22,7 @@ import tempfile
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
+import shlex
 
 from collections import namedtuple
 
@@ -51,29 +52,24 @@ def parse_chapters(filename):
     """
 
     command = ["ffprobe", '-i', filename, "-v", "error", "-print_format", "json", "-show_chapters"]
-    try:
-        # ffmpeg & ffprobe write output into stderr, except when
-        # using -show_XXXX and -print_format. Strange.
-        # Had we ran ffmpeg instead of ffprobe, this would throw since ffmpeg without
-        # an output file will exit with exitcode != 0
-        proc = sub.run(command, check=True, stdout=sub.PIPE, stderr=sub.PIPE)
 
-        # .decode() will most likely explode if the ffprobe json output (chapter metadata)
-        # was written with some weird encoding, and even more so if the data contains text in
-        # multiple different text encodings...
+    # ffmpeg & ffprobe write output into stderr, except when
+    # using -show_XXXX and -print_format. Strange.
+    # Had we ran ffmpeg instead of ffprobe, this would throw since ffmpeg without
+    # an output file will exit with exitcode != 0
+    proc = sub.run(command, check=True, stdout=sub.PIPE, stderr=sub.PIPE)
 
-        # TODO?
-        # https://stackoverflow.com/questions/10009753/python-dealing-with-mixed-encoding-files
-        output = proc.stdout.decode('utf8')
+    # .decode() will most likely explode if the ffprobe json output (chapter metadata)
+    # was written with some weird encoding, and even more so if the data contains text in
+    # multiple different text encodings...
 
-        data = json.loads(output)
+    # TODO?
+    # https://stackoverflow.com/questions/10009753/python-dealing-with-mixed-encoding-files
+    output = proc.stdout.decode('utf8')
 
-        return data
-    except sub.CalledProcessError as exn:
-        print("ERROR: ", exn)
-        print("FFPROBE-STDOUT: ", exn.stdout)
-        print("FFPROBE-STDERR: ", exn.stderr)
-        return None
+    data = json.loads(output)
+
+    return data
 
 
 # Helper type for collecting necessary information about chapter for processing
@@ -115,19 +111,111 @@ def workitem_to_ffmpeg_cmd(w_item):
 
     return cmd
 
+def validate_chapter(chap):
+    """
+    Checks that chapter is valid (i.e has valid length)
+    """
+    start = chap['start']
+    end = chap['end']
+    if (end - start) <= 0:
+        msg = "WARNING: chapter {0} duration <= 0 (start: {1}, end: {2}), skipping..."
+        print(msg.format(chap['id'], start, end))
+        return None
+    return chap
+
+
+def get_title_maybe(chap):
+    """
+    Chapter to title (string) or None
+    """
+    if "tags" not in chap:
+        return None
+    return chap["tags"].get("title", None)
+
+def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenames=True):
+    """
+    Compute WorkItem's for each chapter to be processed. These WorkItems can be then used
+    for launching ffmpeg processes (see ffmpeg_split)
+
+    Arguments:
+
+    infile
+        Path to an audio(book) file. Must contain chapter information in its metadata.
+    outdir
+        Path to a directory where chapter files will be written. Must exist already.
+    enumerate_files
+        Include chapter numbers in output filenames?
+    use_title_in_filenames
+        Include chapter titles in output filenames?
+    """
+
+    in_root, in_ext = os.path.splitext(os.path.basename(infile))
+
+    if 0 in [len(in_root), len(in_ext)]:
+        raise RuntimeError("Unexpected input filename format - root part or extension is empty")
+
+    # Make sure extension has no leading dots.
+    in_ext = in_ext[1:] if in_ext.startswith(".") else in_ext
+
+    # Get chapter metadata
+    info = parse_chapters(infile)
+
+    if (info is None) or ("chapters" not in info) or (len(info["chapters"]) == 0):
+        raise RuntimeError("Could not parse chapters")
+
+    # Collect all valid chapters into a list
+    chapters = list(filter(None, (validate_chapter(ch) for ch in info["chapters"])))
+
+    # Find maximum chapter number. Remember + 1 since enumeration starts at zero!
+    ch_max = max(chap['id'] + 1 for chap in chapters)
+
+    # Produces equal-width zero-padded chapter numbers for use in filenames.
+    chnum_fmt = lambda n: '{n:{fill}{width}}'.format(n=n, fill='0', width=len(str(ch_max)))
+
+    for chapter in chapters:
+        # Get cleaned title or None
+        title_maybe = sanitize_string(get_title_maybe(chapter))
+
+        ch_num = chapter["id"] + 1
+
+        # Use chapter title in output filename base unless disabled or not available.
+        # Otherwise, use the root part of input filename
+        title = title_maybe if (use_title_in_filenames and title_maybe) else in_root
+
+        out_base = "{title}.{ext}".format(title=title, ext=in_ext)
+
+        # Prepend chapter number if requested
+        if enumerate_files:
+            out_base = "{0} - {1}".format(chnum_fmt(ch_num), out_base)
+
+        yield WorkItem(
+            infile   = infile,
+            outfile  = os.path.join(outdir, out_base),
+            start    = chapter["start_time"],
+            end      = chapter["end_time"],
+            ch_num   = ch_num,
+            ch_max   = ch_max,
+            ch_title = get_title_maybe(chapter)
+        )
+
+
 def main(argv):
-    p = argparse.ArgumentParser(description="Split an audiobook chapters into files using ffmpeg")
-    p.add_argument("--infile", required=True,
-                   help="Input file. Chapter information must be present in file metadata")
-    p.add_argument("--outdir", required=False,
-                   help="Output directory. If omitted, a random directory under /tmp/ is used")
-    p.add_argument("--concurrency", required=False, type=int, default=cpu_count(),
-                   help="Number of concurrent ffmpeg worker processes")
+    """
+    CLI wrapper for split_chapters
+    """
+
+    parser = argparse.ArgumentParser(description="Split audiobook chapters using ffmpeg")
+    parser.add_argument("--infile", required=True,
+                        help="Input file. Chapter information must be present in file metadata")
+    parser.add_argument("--outdir", required=False,
+                        help="Output directory. If omitted, a random directory under /tmp/ is used")
+    parser.add_argument("--concurrency", required=False, type=int, default=cpu_count(),
+                        help="Number of concurrent ffmpeg worker processes")
 
     # NOTE: without this mutual exclusion, the output
     # filenames would be identical between chapters!
     # In essence, you can give either (or neither), but not both.
-    excl = p.add_mutually_exclusive_group(required=False)
+    excl = parser.add_mutually_exclusive_group(required=False)
     excl.add_argument("--no-enumerate-filenames", required=False, dest='enumerate_files',
                       action='store_false',
                       help="Do not include chapter numbers in the output filenames")
@@ -135,32 +223,15 @@ def main(argv):
                       dest='use_title', action='store_false',
                       help="Do not include chapter titles in the output filenames")
 
-    p.add_argument("--dry-run", required=False, action='store_true',
-                   help="Show what actions would be taken without taking them")
-    p.add_argument("--verbose", required=False, action="store_true",
-                   help="Show more output")
+    parser.add_argument("--dry-run", required=False, action='store_true',
+                        help="Show what actions would be taken without taking them")
+    parser.add_argument("--verbose", required=False, action="store_true",
+                        help="Show more output")
 
-    args = p.parse_args(argv[1:])
+    args = parser.parse_args(argv[1:])
 
     if args.verbose:
-        print("args:")
-        print(args)
-        print("---")
-
-    fbase, fext = os.path.splitext(os.path.basename(args.infile))
-
-    if 0 in [len(fbase), len(fext)]:
-        print("Something is wrong, basename or file extension is empty")
-        return -1
-
-    if fext.startswith("."):
-        fext = fext[1:]
-
-    info = parse_chapters(args.infile)
-
-    if (info is None) or ("chapters" not in info) or (len(info["chapters"]) == 0):
-        print("Could not parse chapters, exiting...")
-        return -1
+        print("args:", args)
 
     if args.outdir:
         os.makedirs(args.outdir, exist_ok=True)
@@ -171,86 +242,54 @@ def main(argv):
     if args.verbose:
         print("Output directory:", outdir)
 
-    def validate_chapter(chap):
-        start = chap['start']
-        end = chap['end']
-        if (end - start) <= 0:
-            msg = "WARNING: chapter {0} duration <= 0 (start: {1}, end: {2}), skipping..."
-            print(msg.format(chap['id'], start, end))
-            return None
-        return chap
+    work_items = list(compute_workitems(args.infile, outdir,
+                                        enumerate_files=args.enumerate_files,
+                                        use_title_in_filenames=args.use_title))
+    if args.verbose:
+        print("Found: {0} chapters to be processed".format(len(work_items)))
 
-    # Collect all valid chapters into a list
-    chapters = list(filter(None, (validate_chapter(ch) for ch in info["chapters"])))
+    if args.dry_run:
+        return dump_workitem_commands(work_items)
+    return process_workitems(work_items, args.concurrency, args.verbose)
 
-    # Find maximum chapter number
-    max_chapter = max(chap['id'] for chap in chapters)
 
-    # Produce equal-width zero-padded chapter numbers for use in filenames; makes sorting easier
-    chnum_format = lambda n: '{n:{fill}{width}}'.format(n=n, fill='0', width=len(str(max_chapter)))
-
-    # Compute output filename for chapter 'num' with 'title'.
-    def outfile_basename(num, title_maybe):
-        title = title_maybe if (args.use_title and title_maybe) else fbase
-        base = "{title}.{ext}".format(title=title, ext=fext)
-        if args.enumerate_files:
-            return "{0} - {1}".format(chnum_format(num), base)
-        return base
-
-    # Chapter to title (string) or None
-    def get_title_maybe(chap):
-        if "tags" not in chap:
-            return None
-        return chap["tags"].get("title", None)
-
-    def gen_workitems():
-        for chapter in chapters:
-            ch_num = chapter["id"] + 1 # chapter numbering starts at zero
-            out_base = outfile_basename(ch_num, sanitize_string(get_title_maybe(chapter)))
-            yield WorkItem(
-                infile   = args.infile,
-                outfile  = os.path.join(outdir, out_base),
-                start    = chapter["start_time"],
-                end      = chapter["end_time"],
-                ch_num   = ch_num,
-                ch_max   = max_chapter,
-                ch_title = get_title_maybe(chapter)
-            )
-
-    work_items = list(gen_workitems())
-
+def dump_workitem_commands(work_items):
+    """
+    Shows what ffmpeg commands would be run, without running them.
+    """
     # FIXME: dry-run usually means "no side-effects". However, this
     # script will create the output directory in all cases.
-    if args.dry_run:
-        print("Dry run enabled. These commands would be run by workers:")
-        print("---")
-        for cmd in (workitem_to_ffmpeg_cmd(w_item) for w_item in work_items):
-            print(cmd)
-        print("---")
-        print("Dry run complete. Exiting...")
-        return 0
+    print("# NOTE: dry-run requested")
+    for work_item in work_items:
+        print(shlex.join(workitem_to_ffmpeg_cmd(work_item)))
+    return 0
 
-    print("Total: {0} chapters, concurrency: {1}".format(len(work_items), args.concurrency))
+def process_workitems(work_items, concurrency=1, verbose=False):
+    """
+    Runs ffmpeg worker process for each WorkItem, parallellized with ThreadPoolExecutor
+    """
+    if verbose:
+        print("Starting ThreadPoolExecutor with concurrency={0}".format(concurrency))
 
     n_jobs = 0
-    with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
         def start_all():
             for w_item in work_items:
-                if args.verbose:
+                if verbose:
                     print("Submitting job: {}".format(w_item))
                 yield pool.submit(ffmpeg_split, w_item), w_item
 
         futs = dict(start_all())
         n_jobs = len(futs)
-        stats = wait_for_results(futs, args.verbose)
+        stats = wait_for_results(futs, verbose)
 
+    print("Total jobs: {n}, Success: {success}, Errors: {error}".format(n=n_jobs, **stats))
 
-    print("---")
-    print("Processing done")
-    print("Total jobs: {tot}, Success: {success}, Errors: {error}".format(tot=n_jobs, **stats))
     if stats["error"] > 0:
-        print("WARNING: there were errors. Some chapters may not have been processed correctly!")
-    print("Output directory:", outdir)
+        print("WARNING: Due to errors, some chapters may not have been processed!",
+              file=sys.stderr)
+        return -1
+
     return 0
 
 def wait_for_results(futs, verbose=False):
@@ -269,7 +308,8 @@ def wait_for_results(futs, verbose=False):
         else:
             if result['ok']:
                 stats["success"] += 1
-                print("SUCCESS: {0}".format(w_item.outfile))
+                if verbose:
+                    print("SUCCESS: {0}".format(w_item.outfile))
             else:
                 stats["error"] += 1
                 exn_proc = result["exn"]
@@ -280,7 +320,14 @@ def wait_for_results(futs, verbose=False):
     return stats
 
 def ffmpeg_split(w_item):
+    """
+    Split a single chapter using ffmpeg subprocess. Blocks until completion.
 
+    w_item:
+        a WorkItem that fully describes the task to be performed
+    """
+
+    # cmd is a a flat list of strings
     cmd = workitem_to_ffmpeg_cmd(w_item)
 
     try:

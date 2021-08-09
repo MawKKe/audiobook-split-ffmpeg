@@ -1,4 +1,4 @@
-# audiobook-split-ffmpeg.py
+# audiobook_split_ffmpeg.py
 
 Split audiobook file into per-chapter files using chapter metadata and ffmpeg.
 
@@ -24,7 +24,7 @@ shows the following:
 
 Then, running:
 
-    $ python3 audiobook-split-ffmpeg.py --infile mybook.m4b --outdir /tmp/foo
+    $ python3 audiobook_split_ffmpeg.py --infile mybook.m4b --outdir /tmp/foo
 
 ..produces the following files:
 - `/tmp/foo/ch 000 Chapter Zero.m4b`
@@ -37,17 +37,14 @@ You may then play these files with your preferred application.
 
 See the help:
 
-    $ python3 audiobook-split-ffmpeg.py -h
+    $ python3 audiobook_split_ffmpeg.py -h
 
 In the simplest case you can just call
 
-    $ python3 audiobook-split-ffmpeg.py --infile /path/to/audio.m4b
+    $ python3 audiobook_split_ffmpeg.py --infile /path/to/audio.m4b --outdir foo
 
-By default, the chapter files will be written into a temporary directory under
-`/tmp`. You may specify alternative output directory with `--outdir <path>`,
-which will be created if it does not exist. Note that this script will never
-overwrite files, so you must delete conflicting files manually (or specify some
-other empty/nonexistent directory)
+Note that this script will never overwrite files in `foo/`, so you must delete conflicting
+files manually (or specify some other empty/nonexistent directory)
 
 The chapter titles will be included in the filenames if they are available in
 the chapter metadata. You may prevent this behaviour with flag `--no-use-title-as-filename`,

@@ -247,21 +247,14 @@ def main(argv):
     if args.dry_run:
         print("# NOTE: dry-run requested")
         print(shlex.join(["mkdir", "-p", args.outdir]))
-        return dump_workitem_commands(work_items)
+        commands = (workitem_to_ffmpeg_cmd(wi) for wi in work_items)
+        escaped_cmds = (shlex.join(cmd) for cmd in commands)
+        for cmd in escaped_cmds:
+            print(cmd)
+        return 0
 
     return process_workitems(work_items, args.outdir, args.concurrency, args.verbose)
 
-
-def dump_workitem_commands(work_items):
-    """
-    Shows what ffmpeg commands would be run, without running them.
-
-    Hint: you can redirect this output to a file and then run the commands
-          manually (one-by-one, or with GNU parallel)
-    """
-    for work_item in work_items:
-        print(shlex.join(workitem_to_ffmpeg_cmd(work_item)))
-    return 0
 
 def process_workitems(work_items, outdir, concurrency=1, verbose=False):
     """

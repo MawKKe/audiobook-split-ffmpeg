@@ -256,6 +256,9 @@ def main(argv):
 def dump_workitem_commands(work_items):
     """
     Shows what ffmpeg commands would be run, without running them.
+
+    Hint: you can redirect this output to a file and then run the commands
+          manually (one-by-one, or with GNU parallel)
     """
     print("# NOTE: dry-run requested")
     for work_item in work_items:

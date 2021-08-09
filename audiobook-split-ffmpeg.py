@@ -18,7 +18,6 @@ import sys
 import os
 import subprocess as sub
 import argparse
-import tempfile
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
@@ -207,8 +206,8 @@ def main(argv):
     parser = argparse.ArgumentParser(description="Split audiobook chapters using ffmpeg")
     parser.add_argument("--infile", required=True,
                         help="Input file. Chapter information must be present in file metadata")
-    parser.add_argument("--outdir", required=False,
-                        help="Output directory. If omitted, a random directory under /tmp/ is used")
+    parser.add_argument("--outdir", required=True,
+                        help="Output directory. Created if does not exist yet.")
     parser.add_argument("--concurrency", required=False, type=int, default=cpu_count(),
                         help="Number of concurrent ffmpeg worker processes")
 
@@ -233,24 +232,18 @@ def main(argv):
     if args.verbose:
         print("args:", args)
 
-    if args.outdir:
-        os.makedirs(args.outdir, exist_ok=True)
-        outdir = args.outdir
-    else:
-        outdir = tempfile.mkdtemp(prefix="ffmpeg-split-")
-
-    if args.verbose:
-        print("Output directory:", outdir)
-
-    work_items = list(compute_workitems(args.infile, outdir,
+    work_items = list(compute_workitems(args.infile, args.outdir,
                                         enumerate_files=args.enumerate_files,
                                         use_title_in_filenames=args.use_title))
     if args.verbose:
         print("Found: {0} chapters to be processed".format(len(work_items)))
 
     if args.dry_run:
+        print("# NOTE: dry-run requested")
+        print(shlex.join(["mkdir", "-p", args.outdir]))
         return dump_workitem_commands(work_items)
-    return process_workitems(work_items, args.concurrency, args.verbose)
+
+    return process_workitems(work_items, args.outdir, args.concurrency, args.verbose)
 
 
 def dump_workitem_commands(work_items):
@@ -260,16 +253,19 @@ def dump_workitem_commands(work_items):
     Hint: you can redirect this output to a file and then run the commands
           manually (one-by-one, or with GNU parallel)
     """
-    print("# NOTE: dry-run requested")
     for work_item in work_items:
         print(shlex.join(workitem_to_ffmpeg_cmd(work_item)))
     return 0
 
-def process_workitems(work_items, concurrency=1, verbose=False):
+def process_workitems(work_items, outdir, concurrency=1, verbose=False):
     """
     Runs ffmpeg worker process for each WorkItem, parallellized with ThreadPoolExecutor
     """
+
+    os.makedirs(outdir, exist_ok=True)
+
     if verbose:
+        print("Output directory: {}".format(outdir))
         print("Starting ThreadPoolExecutor with concurrency={0}".format(concurrency))
 
     n_jobs = 0

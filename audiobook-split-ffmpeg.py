@@ -257,8 +257,6 @@ def dump_workitem_commands(work_items):
     """
     Shows what ffmpeg commands would be run, without running them.
     """
-    # FIXME: dry-run usually means "no side-effects". However, this
-    # script will create the output directory in all cases.
     print("# NOTE: dry-run requested")
     for work_item in work_items:
         print(shlex.join(workitem_to_ffmpeg_cmd(work_item)))

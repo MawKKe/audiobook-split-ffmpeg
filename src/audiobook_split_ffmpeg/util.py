@@ -16,6 +16,10 @@ import os
 from collections import namedtuple
 from .ffmpeg import ffprobe_read_chapters
 
+# Helper type for collecting necessary information about chapter for processing
+WorkItem = namedtuple("WorkItem",
+                      ["infile", "outfile", "start", "end", "ch_num", "ch_max", "ch_title"])
+
 
 # Special characters interpreted specially by most crappy software
 
@@ -28,7 +32,6 @@ def _sanitize_string(original):
     if original is None:
         return None
     return ''.join(c for c in original if c not in _CHR_BLACKLIST)
-
 
 
 def _validate_chapter(chap):
@@ -51,11 +54,6 @@ def _get_title_maybe(chap):
     if "tags" not in chap:
         return None
     return chap["tags"].get("title", None)
-
-
-# Helper type for collecting necessary information about chapter for processing
-WorkItem = namedtuple("WorkItem",
-                      ["infile", "outfile", "start", "end", "ch_num", "ch_max", "ch_title"])
 
 
 def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenames=True):

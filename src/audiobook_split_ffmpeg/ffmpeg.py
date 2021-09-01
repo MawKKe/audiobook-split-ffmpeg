@@ -36,7 +36,7 @@ def ffprobe_read_chapters(filename):
     # was written with some weird encoding, and even more so if the data contains text in
     # multiple different text encodings...
 
-    # TODO?
+    # TODO how does this handle non-ascii/utf8 metadata?
     # https://stackoverflow.com/questions/10009753/python-dealing-with-mixed-encoding-files
     output = proc.stdout.decode('utf8')
 

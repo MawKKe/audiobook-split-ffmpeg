@@ -23,6 +23,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .ffmpeg import ffmpeg_split_chapter
 
+
 def process_workitems(work_items, outdir, concurrency=1, verbose=False):
     """
     Runs ffmpeg worker process for each WorkItem, parallellized with ThreadPoolExecutor
@@ -55,6 +56,7 @@ def process_workitems(work_items, outdir, concurrency=1, verbose=False):
 
     return 0
 
+
 def _wait_for_results(futs, verbose=False):
     """
     Collect ffmpeg processing results and display whether chapter was processed correctly
@@ -65,7 +67,7 @@ def _wait_for_results(futs, verbose=False):
         try:
             result = fut.result()
         # this looks nasty as hell, but hey, this is what they do in python docs..
-        except Exception as exn_wtf: # pylint: disable=broad-except
+        except Exception as exn_wtf:  # pylint: disable=broad-except
             stats["error"] += 1
             print("ERROR: job '{}' generated an exeption: {}".format(w_item.outfile, exn_wtf))
         else:
@@ -79,5 +81,5 @@ def _wait_for_results(futs, verbose=False):
                 print("FAILURE: {0}".format(exn_proc.stderr.decode('utf8').strip()))
                 if verbose:
                     print("Command that failed: {0}".format(result["cmd"]))
-                    print("-"*5)
+                    print("-" * 5)
     return stats

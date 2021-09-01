@@ -19,6 +19,7 @@ Utility functionality for interacting with system ffmpeg executables
 import json
 import subprocess as sub
 
+
 def ffprobe_read_chapters(filename):
     """
     Read chapter metadata from 'filename' using ffprobe and return it as dict
@@ -36,13 +37,14 @@ def ffprobe_read_chapters(filename):
     # was written with some weird encoding, and even more so if the data contains text in
     # multiple different text encodings...
 
-    # TODO how does this handle non-ascii/utf8 metadata?
+    # TODO how does this handle non-ascii/utf8 metadata? # pylint: disable=fixme
     # https://stackoverflow.com/questions/10009753/python-dealing-with-mixed-encoding-files
     output = proc.stdout.decode('utf8')
 
     data = json.loads(output)
 
     return data
+
 
 def workitem_to_ffmpeg_cmd(w_item):
     """
@@ -71,13 +73,14 @@ def workitem_to_ffmpeg_cmd(w_item):
 
     metadata_track = ["-metadata", "track={}/{}".format(w_item.ch_num, w_item.ch_max)]
 
-    # TODO how does this handle mangled title values?
+    # TODO how does this handle mangled title values? # pylint: disable=fixme
     metadata_title = ["-metadata", "title={}".format(w_item.ch_title)] if w_item.ch_title else []
 
     # Build the final command
     cmd = base_cmd + metadata_track + metadata_title + [w_item.outfile]
 
     return cmd
+
 
 def ffmpeg_split_chapter(w_item):
     """

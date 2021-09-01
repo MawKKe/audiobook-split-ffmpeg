@@ -26,6 +26,7 @@ from .util import compute_workitems
 from .ffmpeg import workitem_to_ffmpeg_cmd
 from .workers import process_workitems
 
+
 def parse_args(argv):
     """
     Parse argv into argparse.Namespace
@@ -66,6 +67,7 @@ def parse_args(argv):
 
     return args
 
+
 def _main(args):
     """
     CLI main function for audiobook-split-ffmpeg
@@ -97,11 +99,13 @@ def _main(args):
 
     return process_workitems(work_items, args.outdir, args.concurrency, args.verbose)
 
+
 def main():
     """
     CLI main function for audiobook-split-ffmpeg
     """
     sys.exit(_main(parse_args(sys.argv)))
+
 
 if __name__ == "__main__":
     main()

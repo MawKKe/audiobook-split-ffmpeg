@@ -36,8 +36,8 @@ example how to combine the functions to produce a useful application.
 More information in Github: https://github.com/MawKKe/audiobook-split-ffmpeg
 """
 
-__author__    = "Markus Holmström (MawKKe) - markus@mawkke.fi"
-
 from .ffmpeg import ffprobe_read_chapters, workitem_to_ffmpeg_cmd, ffmpeg_split_chapter
 from .workers import process_workitems
 from .util import compute_workitems
+
+__author__ = "Markus Holmström (MawKKe) - markus@mawkke.fi"

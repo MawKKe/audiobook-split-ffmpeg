@@ -29,6 +29,7 @@ WorkItem = namedtuple("WorkItem",
 
 _CHR_BLACKLIST = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|", "\0"]
 
+
 def _sanitize_string(original):
     """
     Filter typical special letters from string
@@ -98,7 +99,8 @@ def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenam
     ch_max = max(chap['id'] + 1 for chap in chapters)
 
     # Produces equal-width zero-padded chapter numbers for use in filenames.
-    chnum_fmt = lambda n: '{n:{fill}{width}}'.format(n=n, fill='0', width=len(str(ch_max)))
+    def chnum_fmt(n):
+        return '{n:{fill}{width}}'.format(n=n, fill='0', width=len(str(ch_max)))
 
     for chapter in chapters:
         # Get cleaned title or None

@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Functioality for consuming WorkItems and producing final chapter files
+with parallel worker threads/processes.
+"""
+
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -60,7 +65,7 @@ def _wait_for_results(futs, verbose=False):
         try:
             result = fut.result()
         # this looks nasty as hell, but hey, this is what they do in python docs..
-        except Exception as exn_wtf:
+        except Exception as exn_wtf: # pylint: disable=broad-except
             stats["error"] += 1
             print("ERROR: job '{}' generated an exeption: {}".format(w_item.outfile, exn_wtf))
         else:
@@ -76,6 +81,3 @@ def _wait_for_results(futs, verbose=False):
                     print("Command that failed: {0}".format(result["cmd"]))
                     print("-"*5)
     return stats
-
-
-

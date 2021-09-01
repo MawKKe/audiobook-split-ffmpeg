@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+CLI application implementation for audiobook-split-ffmpeg
+"""
+
 import sys
 import shlex
 import argparse
@@ -23,6 +27,17 @@ from .ffmpeg import workitem_to_ffmpeg_cmd
 from .workers import process_workitems
 
 def parse_args(argv):
+    """
+    Parse argv into argparse.Namespace
+
+    Arguments:
+
+    argv
+        a list of strings, usually the value of sys.argv
+
+    WARNING:
+        If argv is malformed, the process will exit. Avoid using this function in tests.
+    """
     parser = argparse.ArgumentParser(description="Split audiobook chapters using ffmpeg")
     parser.add_argument("--infile", required=True,
                         help="Input file. Chapter information must be present in file metadata")
@@ -53,7 +68,13 @@ def parse_args(argv):
 
 def _main(args):
     """
-    CLI wrapper for split_chapters
+    CLI main function for audiobook-split-ffmpeg
+
+    Arguments:
+
+    args
+        an argparse.Namespace() object containing the required command line arguments
+        See parse_args() for more details.
     """
 
     if args.verbose:
@@ -77,6 +98,9 @@ def _main(args):
     return process_workitems(work_items, args.outdir, args.concurrency, args.verbose)
 
 def main():
+    """
+    CLI main function for audiobook-split-ffmpeg
+    """
     sys.exit(_main(parse_args(sys.argv)))
 
 if __name__ == "__main__":

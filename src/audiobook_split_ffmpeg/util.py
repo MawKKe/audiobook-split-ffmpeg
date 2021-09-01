@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Various utilities for audiobook_split_ffmpeg
+"""
+
 import os
 from collections import namedtuple
 from .ffmpeg import ffprobe_read_chapters
@@ -121,4 +125,3 @@ def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenam
             ch_max   = ch_max,
             ch_title = _get_title_maybe(chapter)
         )
-

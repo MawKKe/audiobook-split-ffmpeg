@@ -66,15 +66,25 @@ input file to the output file(s) - this kind of processing is more I/O bounded t
 
 # Dependencies
 
-- Python 3.5 or newer
-- Obviously you need ffmpeg (and ffprobe) installed.
+This application has no 3rd party library dependencies, as everything is
+implemented using the Python standard library. However, the script assumes
+the that the following system-executables are available somewhere in your `$PATH`:
 
-There are no 3rd party library requirements for the main functionality. Everything is accomplished
-with just the python3 stdlib.
+- `ffmpeg`
+- `ffprobe`
 
-However, development and testing environments should have the following available:
-- pytest
-- tox
+For Ubuntu, these can be installed with `apt install ffmpeg`.
+
+# Development and Testing
+
+Clone the repo, and install the package in development mode:
+
+    $ git clone <url> audiobook-split-ffmpeg && cd audiobook-split-ffmpeg
+    $ pip install -e '.[dev]'
+
+then run tests with:
+
+    $ pytest -vv
 
 # Features
 

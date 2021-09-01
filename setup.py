@@ -18,6 +18,8 @@ if __name__ == "__main__":
             url='https://github.com/MawKKe/audiobook-split-ffmpeg',
             author='Markus H (MawKKe)',
             author_email='markus@mawkke.fi',
+            license='Apache 2.0',
+            package_date={'': ['LICENSE']},
             package_dir={'': 'src'},
             packages=find_packages(where='src'),
             entry_points={

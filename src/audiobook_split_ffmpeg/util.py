@@ -12,20 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Split audiobook file into per-chapter files using chapter metadata and ffmpeg
-
-You can call this file as a CLI script. Run the script with --help to see usage.
-
-OR
-
-You can use the top-level functions 'compute_workitems' and 'ffmpeg_split',
-'process_workitems' for processing the file from another script.
-
-More information in Github: https://github.com/MawKKe/audiobook-split-ffmpeg
-"""
-__author__    = "Markus Holmström (MawKKe)"
-
 import os
 from collections import namedtuple
 from .ffmpeg import ffprobe_read_chapters

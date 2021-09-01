@@ -19,6 +19,7 @@ if __name__ == "__main__":
             author='Markus H (MawKKe)',
             author_email='markus@mawkke.fi',
             package_dir={'': 'src'},
+            packages=find_packages(where='src'),
             entry_points={
                 'console_scripts': {
                     'audiobook-split-ffmpeg=audiobook_split_ffmpeg.cli:main'

@@ -6,6 +6,8 @@ here = pathlib.Path(__file__).parent.resolve()
 
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
+requirements = []
+
 if __name__ == "__main__":
     setup(
             name="audiobook-split-ffmpeg",
@@ -23,7 +25,12 @@ if __name__ == "__main__":
                 }
             },
             python_requires='>=3.6, <4',
-            install_requires=[],
+            install_requires=requirements,
+            extras_require={
+                'dev': [
+                    'pytest'
+                ]
+            },
             project_urls={
                 'Bug reports': 'https://github.com/MawKKe/audiobook-split-ffmpeg/issues',
                 'Source': 'https://github.com/MawKKe/audiobook-split-ffmpeg'

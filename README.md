@@ -1,4 +1,4 @@
-# audiobook_split_ffmpeg.py
+# audiobook-split-ffmpeg
 
 Split audiobook file into per-chapter files using chapter metadata and ffmpeg.
 
@@ -24,7 +24,7 @@ shows the following:
 
 Then, running:
 
-    $ python3 audiobook_split_ffmpeg.py --infile mybook.m4b --outdir /tmp/foo
+    $ audiobook-split-ffmpeg --infile mybook.m4b --outdir /tmp/foo
 
 ..produces the following files:
 - `/tmp/foo/001 - Chapter Zero.m4b`
@@ -33,15 +33,22 @@ Then, running:
 
 You may then play these files with your preferred application.
 
+# Install
+
+    $ pip install --user git+https://github.com/MawKKe/audiobook-split-ffmpeg
+
+This should place the main script into your user's PATH (`$HOME/.local/bin/` or
+similar). Next, see `Usage` below.
+
 # Usage
 
 See the help:
 
-    $ python3 audiobook_split_ffmpeg.py -h
+    $ audiobook-split-ffmpeg -h
 
 In the simplest case you can just call
 
-    $ python3 audiobook_split_ffmpeg.py --infile /path/to/audio.m4b --outdir foo
+    $ audiobook-split-ffmpeg --infile /path/to/audio.m4b --outdir foo
 
 Note that this script will never overwrite files in `foo/`, so you must delete conflicting
 files manually (or specify some other empty/nonexistent directory)
@@ -62,7 +69,12 @@ input file to the output file(s) - this kind of processing is more I/O bounded t
 - Python 3.5 or newer
 - Obviously you need ffmpeg (and ffprobe) installed.
 
-There are no 3rd party library dependencies. Everything is accomplished with just the python3 stdlib.
+There are no 3rd party library requirements for the main functionality. Everything is accomplished
+with just the python3 stdlib.
+
+However, development and testing environments should have the following available:
+- pytest
+- tox
 
 # Features
 

@@ -95,7 +95,7 @@ However, development and testing environments should have the following availabl
 Copyright 2018 Markus Holmström (MawKKe)
 
 The works under this repository are licenced under Apache License 2.0.
-See file `LICENCE` for more information.
+See file `LICENSE` for more information.
 
 # Contributing
 

@@ -19,7 +19,6 @@ dev = [
   'ruff>=0.3',
   'pytest>=7',
   'pytest-cov',
-  'exceptiongroup',
 ]
 
 [project.urls]

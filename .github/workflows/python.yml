@@ -1,0 +1,42 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python app
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: FedericoCarboni/setup-ffmpeg@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install environment
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements-dev.txt
+    - name: Run linter
+      run: |
+        make lint
+    - name: Run tests
+      run: |
+        make test
+    - name: Verify main entrypoint script works
+      run: |
+        python -m venv app-venv && ./app-venv/bin/pip install .
+        ./app-venv/bin/audiobook-split-ffmpeg --help
+        ./app-venv/bin/audiobook-split-ffmpeg --infile tests/beep.m4a --outdir _out --verbose

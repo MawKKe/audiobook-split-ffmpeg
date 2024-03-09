@@ -25,13 +25,27 @@ def ffprobe_read_chapters(filename):
     Read chapter metadata from 'filename' using ffprobe and return it as dict
     """
 
-    command = ["ffprobe", '-i', filename, "-v", "error", "-print_format", "json", "-show_chapters"]
+    command = [
+        'ffprobe',
+        '-i',
+        filename,
+        '-v',
+        'error',
+        '-print_format',
+        'json',
+        '-show_chapters',
+    ]
 
     # ffmpeg & ffprobe write output into stderr, except when
     # using -show_XXXX and -print_format. Strange.
     # Had we ran ffmpeg instead of ffprobe, this would throw since ffmpeg without
     # an output file will exit with exitcode != 0
-    proc = sub.run(command, check=True, stdout=sub.PIPE, stderr=sub.PIPE)
+    proc = sub.run(
+        command,
+        check=True,
+        stdout=sub.PIPE,
+        stderr=sub.PIPE,
+    )
 
     # .decode() will most likely explode if the ffprobe json output (chapter metadata)
     # was written with some weird encoding, and even more so if the data contains text in
@@ -59,22 +73,38 @@ def workitem_to_ffmpeg_cmd(w_item):
     # the top of the file).
 
     base_cmd = [
-        "ffmpeg",
-        "-nostdin",
-        "-i", w_item.infile,
-        "-v", "error",
-        "-map_chapters", "-1",
-        "-vn",
-        "-c", "copy",
-        "-ss", w_item.start,
-        "-to", w_item.end,
-        "-n"
+        'ffmpeg',
+        '-nostdin',
+        '-i',
+        w_item.infile,
+        '-v',
+        'error',
+        '-map_chapters',
+        '-1',
+        '-vn',
+        '-c',
+        'copy',
+        '-ss',
+        w_item.start,
+        '-to',
+        w_item.end,
+        '-n',
     ]
 
-    metadata_track = ["-metadata", "track={}/{}".format(w_item.ch_num, w_item.ch_max)]
+    metadata_track = [
+        '-metadata',
+        'track={}/{}'.format(w_item.ch_num, w_item.ch_max),
+    ]
 
     # TODO how does this handle mangled title values? # pylint: disable=fixme
-    metadata_title = ["-metadata", "title={}".format(w_item.ch_title)] if w_item.ch_title else []
+    metadata_title = (
+        [
+            '-metadata',
+            'title={}'.format(w_item.ch_title),
+        ]
+        if w_item.ch_title
+        else []
+    )
 
     # Build the final command
     cmd = base_cmd + metadata_track + metadata_title + [w_item.outfile]
@@ -94,7 +124,24 @@ def ffmpeg_split_chapter(w_item):
     cmd = workitem_to_ffmpeg_cmd(w_item)
 
     try:
-        proc = sub.run(cmd, check=True, stdout=sub.PIPE, stderr=sub.PIPE)
-        return {'ok': True, 'w_item': w_item, 'proc': proc, 'exn': None, 'cmd': cmd}
+        proc = sub.run(
+            cmd,
+            check=True,
+            stdout=sub.PIPE,
+            stderr=sub.PIPE,
+        )
+        return {
+            'ok': True,
+            'w_item': w_item,
+            'proc': proc,
+            'exn': None,
+            'cmd': cmd,
+        }
     except sub.CalledProcessError as exn:
-        return {'ok': False, 'w_item': w_item, 'proc': None, 'exn': exn, 'cmd': cmd}
+        return {
+            'ok': False,
+            'w_item': w_item,
+            'proc': None,
+            'exn': exn,
+            'cmd': cmd,
+        }

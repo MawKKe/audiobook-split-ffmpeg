@@ -22,6 +22,7 @@ import argparse
 
 from multiprocessing import cpu_count
 
+from . import __version__
 from .util import compute_workitems
 from .ffmpeg import workitem_to_ffmpeg_cmd
 from .workers import process_workitems
@@ -39,29 +40,59 @@ def parse_args(argv):
     WARNING:
         If argv is malformed, the process will exit. Avoid using this function in tests.
     """
-    parser = argparse.ArgumentParser(description="Split audiobook chapters using ffmpeg")
-    parser.add_argument("--infile", required=True,
-                        help="Input file. Chapter information must be present in file metadata")
-    parser.add_argument("--outdir", required=True,
-                        help="Output directory. Created if does not exist yet.")
-    parser.add_argument("--concurrency", required=False, type=int, default=cpu_count(),
-                        help="Number of concurrent ffmpeg worker processes")
+    parser = argparse.ArgumentParser(
+        description='Split audiobook chapters using ffmpeg', epilog=f'version {__version__}'
+    )
+    parser.add_argument(
+        '--infile',
+        required=True,
+        help='Input file. Chapter information must be present in file metadata',
+    )
+    parser.add_argument(
+        '--outdir',
+        required=True,
+        help='Output directory. Created if does not exist yet.',
+    )
+    parser.add_argument(
+        '--concurrency',
+        required=False,
+        type=int,
+        default=cpu_count(),
+        help='Number of concurrent ffmpeg worker processes',
+    )
 
     # NOTE: without this mutual exclusion, the output
     # filenames would be identical between chapters!
     # In essence, you can give either (or neither), but not both.
     excl = parser.add_mutually_exclusive_group(required=False)
-    excl.add_argument("--no-enumerate-filenames", required=False, dest='enumerate_files',
-                      action='store_false',
-                      help="Do not include chapter numbers in the output filenames")
-    excl.add_argument("--no-use-title", "--no-use-title-as-filename", required=False,
-                      dest='use_title', action='store_false',
-                      help="Do not include chapter titles in the output filenames")
+    excl.add_argument(
+        '--no-enumerate-filenames',
+        required=False,
+        dest='enumerate_files',
+        action='store_false',
+        help='Do not include chapter numbers in the output filenames',
+    )
+    excl.add_argument(
+        '--no-use-title',
+        '--no-use-title-as-filename',
+        required=False,
+        dest='use_title',
+        action='store_false',
+        help='Do not include chapter titles in the output filenames',
+    )
 
-    parser.add_argument("--dry-run", required=False, action='store_true',
-                        help="Show what actions would be taken without taking them")
-    parser.add_argument("--verbose", required=False, action="store_true",
-                        help="Show more output")
+    parser.add_argument(
+        '--dry-run',
+        required=False,
+        action='store_true',
+        help='Show what actions would be taken without taking them',
+    )
+    parser.add_argument(
+        '--verbose',
+        required=False,
+        action='store_true',
+        help='Show more output',
+    )
 
     args = parser.parse_args(argv[1:])
 
@@ -80,24 +111,34 @@ def _main(args):
     """
 
     if args.verbose:
-        print("args:", args)
+        print('args:', args)
 
-    work_items = list(compute_workitems(args.infile, args.outdir,
-                                        enumerate_files=args.enumerate_files,
-                                        use_title_in_filenames=args.use_title))
+    work_items = list(
+        compute_workitems(
+            args.infile,
+            args.outdir,
+            enumerate_files=args.enumerate_files,
+            use_title_in_filenames=args.use_title,
+        )
+    )
     if args.verbose:
-        print("Found: {0} chapters to be processed".format(len(work_items)))
+        print('Found: {0} chapters to be processed'.format(len(work_items)))
 
     if args.dry_run:
-        print("# NOTE: dry-run requested")
-        print(shlex.join(["mkdir", "-p", args.outdir]))
+        print('# NOTE: dry-run requested')
+        print(shlex.join(['mkdir', '-p', args.outdir]))
         commands = (workitem_to_ffmpeg_cmd(wi) for wi in work_items)
         escaped_cmds = (shlex.join(cmd) for cmd in commands)
         for cmd in escaped_cmds:
             print(cmd)
         return 0
 
-    return process_workitems(work_items, args.outdir, args.concurrency, args.verbose)
+    return process_workitems(
+        work_items,
+        args.outdir,
+        args.concurrency,
+        args.verbose,
+    )
 
 
 def main():
@@ -107,5 +148,5 @@ def main():
     sys.exit(_main(parse_args(sys.argv)))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

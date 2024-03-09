@@ -35,3 +35,8 @@ jobs:
     - name: Run tests
       run: |
         make test
+    - name: Verify main entrypoint script works
+      run: |
+        python -m venv app-venv && ./app-venv/bin/pip install .
+        ./app-venv/bin/audiobook-split-ffmpeg --help
+        ./app-venv/bin/audiobook-split-ffmpeg --infile tests/beep.m4a --outdir _out --verbose

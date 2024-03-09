@@ -22,6 +22,7 @@ import argparse
 
 from multiprocessing import cpu_count
 
+from . import __version__
 from .util import compute_workitems
 from .ffmpeg import workitem_to_ffmpeg_cmd
 from .workers import process_workitems
@@ -39,7 +40,9 @@ def parse_args(argv):
     WARNING:
         If argv is malformed, the process will exit. Avoid using this function in tests.
     """
-    parser = argparse.ArgumentParser(description='Split audiobook chapters using ffmpeg')
+    parser = argparse.ArgumentParser(
+        description='Split audiobook chapters using ffmpeg', epilog=f'version {__version__}'
+    )
     parser.add_argument(
         '--infile',
         required=True,

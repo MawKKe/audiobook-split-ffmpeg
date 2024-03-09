@@ -8,7 +8,7 @@ authors = [
     {name='Markus H (MawKKe)', email='markus@mawkke.fi'}
 ]
 description = 'Split audiobook file into per-chapter files using chapter metadata and ffmpeg'
-version = '0.1.0'
+version = '0.2.0'
 license = {text = 'Apache License 2.0'}
 readme = 'README.md'
 requires-python = '>=3.8'

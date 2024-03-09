@@ -35,10 +35,18 @@ You may then play these files with your preferred application.
 
 # Install
 
+This package is not published in the PYPI, but you can install it directly from Github with
+
     $ pip install --user git+https://github.com/MawKKe/audiobook-split-ffmpeg
 
-This should place the main script into your user's PATH (`$HOME/.local/bin/` or
-similar). Next, see `Usage` below.
+**However**, I personally recommend using [pipx](https://github.com/pypa/pipx)
+which simplifies installing python applications into isolated virtualenvs:
+
+    $ pipx install git+https://github.com/MawKKe/audiobook-split-ffmpeg
+
+afterwards, the `audiobook-split-ffmpeg` command should be available via your `PATH`. 
+
+Next, see Usage below.
 
 # Usage
 
@@ -99,6 +107,7 @@ then run tests with:
   numbers are of equal length. This makes the files much easier to sort by name.
 
 - The work is parallelized to speed up the processing.
+
 
 # License
 

@@ -21,13 +21,34 @@ from collections import namedtuple
 from .ffmpeg import ffprobe_read_chapters
 
 # Helper type for collecting necessary information about chapter for processing
-WorkItem = namedtuple("WorkItem",
-                      ["infile", "outfile", "start", "end", "ch_num", "ch_max", "ch_title"])
+WorkItem = namedtuple(
+    'WorkItem',
+    [
+        'infile',
+        'outfile',
+        'start',
+        'end',
+        'ch_num',
+        'ch_max',
+        'ch_title',
+    ],
+)
 
 
 # Special characters interpreted specially by most crappy software
 
-_CHR_BLACKLIST = ["\\", "/", ":", "*", "?", "\"", "<", ">", "|", "\0"]
+_CHR_BLACKLIST = [
+    '\\',
+    '/',
+    ':',
+    '*',
+    '?',
+    '"',
+    '<',
+    '>',
+    '|',
+    '\0',
+]
 
 
 def _sanitize_string(original):
@@ -46,7 +67,7 @@ def _validate_chapter(chap):
     start = chap['start']
     end = chap['end']
     if (end - start) <= 0:
-        msg = "WARNING: chapter {0} duration <= 0 (start: {1}, end: {2}), skipping..."
+        msg = 'WARNING: chapter {0} duration <= 0 (start: {1}, end: {2}), skipping...'
         print(msg.format(chap['id'], start, end))
         return None
     return chap
@@ -56,12 +77,17 @@ def _get_title_maybe(chap):
     """
     Chapter to title (string) or None
     """
-    if "tags" not in chap:
+    if 'tags' not in chap:
         return None
-    return chap["tags"].get("title", None)
+    return chap['tags'].get('title', None)
 
 
-def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenames=True):
+def compute_workitems(
+    infile,
+    outdir,
+    enumerate_files=True,
+    use_title_in_filenames=True,
+):
     """
     Compute WorkItem's for each chapter to be processed. These WorkItems can be then used
     for launching ffmpeg processes (see ffmpeg_split_chapter)
@@ -81,19 +107,24 @@ def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenam
     in_root, in_ext = os.path.splitext(os.path.basename(infile))
 
     if 0 in [len(in_root), len(in_ext)]:
-        raise RuntimeError("Unexpected input filename format - root part or extension is empty")
+        raise RuntimeError('Unexpected input filename format - root part or extension is empty')
 
     # Make sure extension has no leading dots.
-    in_ext = in_ext[1:] if in_ext.startswith(".") else in_ext
+    in_ext = in_ext[1:] if in_ext.startswith('.') else in_ext
 
     # Get chapter metadata
     info = ffprobe_read_chapters(infile)
 
-    if (info is None) or ("chapters" not in info) or (len(info["chapters"]) == 0):
-        raise RuntimeError("Could not parse chapters")
+    if (info is None) or ('chapters' not in info) or (len(info['chapters']) == 0):
+        raise RuntimeError('Could not parse chapters')
 
     # Collect all valid chapters into a list
-    chapters = list(filter(None, (_validate_chapter(ch) for ch in info["chapters"])))
+    chapters = list(
+        filter(
+            None,
+            (_validate_chapter(ch) for ch in info['chapters']),
+        )
+    )
 
     # Find maximum chapter number. Remember + 1 since enumeration starts at zero!
     ch_max = max(chap['id'] + 1 for chap in chapters)
@@ -106,24 +137,24 @@ def compute_workitems(infile, outdir, enumerate_files=True, use_title_in_filenam
         # Get cleaned title or None
         title_maybe = _sanitize_string(_get_title_maybe(chapter))
 
-        ch_num = chapter["id"] + 1
+        ch_num = chapter['id'] + 1
 
         # Use chapter title in output filename base unless disabled or not available.
         # Otherwise, use the root part of input filename
         title = title_maybe if (use_title_in_filenames and title_maybe) else in_root
 
-        out_base = "{title}.{ext}".format(title=title, ext=in_ext)
+        out_base = '{title}.{ext}'.format(title=title, ext=in_ext)
 
         # Prepend chapter number if requested
         if enumerate_files:
-            out_base = "{0} - {1}".format(chnum_fmt(ch_num), out_base)
+            out_base = '{0} - {1}'.format(chnum_fmt(ch_num), out_base)
 
         yield WorkItem(
-            infile   = infile,
-            outfile  = os.path.join(outdir, out_base),
-            start    = chapter["start_time"],
-            end      = chapter["end_time"],
-            ch_num   = ch_num,
-            ch_max   = ch_max,
-            ch_title = _get_title_maybe(chapter)
+            infile=infile,
+            outfile=os.path.join(outdir, out_base),
+            start=chapter['start_time'],
+            end=chapter['end_time'],
+            ch_num=ch_num,
+            ch_max=ch_max,
+            ch_title=_get_title_maybe(chapter),
         )

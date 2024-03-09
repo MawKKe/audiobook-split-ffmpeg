@@ -1,7 +1,48 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel",
+requires = ['setuptools>=61']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'audiobook-split-ffmpeg'
+authors = [
+    {name='Markus H (MawKKe)', email='markus@mawkke.fi'}
+]
+description = 'Split audiobook file into per-chapter files using chapter metadata and ffmpeg'
+version = '0.1.0'
+license = {text = 'Apache License 2.0'}
+readme = 'README.md'
+requires-python = '>=3.6'
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  'ruff>=0.3',
+  'pytest>=7',
+  'pytest-cov',
 ]
 
-build-backend = "setuptools.build_meta"
+[project.urls]
+homepage = 'https://github.com/MawKKe/audiobook-split-ffmpeg'
+Issues = 'https://github.com/MawKKe/audiobook-split-ffmpeg/issues'
+
+[project.scripts]
+audiobook-split-ffmpeg = 'audiobook_split_ffmpeg.cli:main'
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "src",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+# Use single quotes rather than double quotes.
+quote-style = 'single'
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint]
+select = ['E4', 'E7', 'E9', 'F', 'C901']
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10

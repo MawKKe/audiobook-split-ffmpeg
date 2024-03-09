@@ -11,7 +11,7 @@ description = 'Split audiobook file into per-chapter files using chapter metadat
 version = '0.1.0'
 license = {text = 'Apache License 2.0'}
 readme = 'README.md'
-requires-python = '>=3.6'
+requires-python = '>=3.8'
 dependencies = []
 
 [project.optional-dependencies]
@@ -19,6 +19,7 @@ dev = [
   'ruff>=0.3',
   'pytest>=7',
   'pytest-cov',
+  'exceptiongroup',
 ]
 
 [project.urls]

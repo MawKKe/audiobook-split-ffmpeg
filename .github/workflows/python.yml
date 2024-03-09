@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.6", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v3
@@ -26,7 +26,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install environment
       run: |
-        make sync-venv
+        python -m pip install --upgrade pip
+        python -m pip install --no-deps -r requirements-dev.txt
     - name: Run linter
       run: |
         make lint

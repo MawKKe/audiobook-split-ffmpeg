@@ -24,7 +24,6 @@ requirements.txt: pyproject.toml
 
 requirements-dev.txt: requirements.txt
 	pip-compile \
-	    --generate-hashes \
 	    --strip-extras \
 	    --constraint requirements.txt \
 	    --output-file=requirements-dev.txt \

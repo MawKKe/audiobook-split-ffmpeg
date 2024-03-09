@@ -8,11 +8,14 @@ authors = [
     {name='Markus H (MawKKe)', email='markus@mawkke.fi'}
 ]
 description = 'Split audiobook file into per-chapter files using chapter metadata and ffmpeg'
-version = '0.2.0'
+dynamic = ["version"]
 license = {text = 'Apache License 2.0'}
 readme = 'README.md'
 requires-python = '>=3.8'
 dependencies = []
+
+[tool.setuptools.dynamic]
+version = {attr = "audiobook_split_ffmpeg.__version__"}
 
 [project.optional-dependencies]
 dev = [

@@ -40,7 +40,9 @@ fmt format:
 lint:
 	ruff check --output-format=full --statistics --exit-zero
 
-test:
+test: test-pytest test-mypy
+
+test-pytest:
 	pytest --cov=audiobook_split_ffmpeg tests/
 
 test-mypy:

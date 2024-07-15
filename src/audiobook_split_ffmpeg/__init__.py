@@ -40,9 +40,9 @@ from .ffmpeg import (
     ffprobe_read_chapters,
     workitem_to_ffmpeg_cmd,
     ffmpeg_split_chapter,
+    compute_workitems,
 )
 from .workers import process_workitems
-from .util import compute_workitems
 
 __all__ = [
     'ffprobe_read_chapters',

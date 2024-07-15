@@ -24,8 +24,7 @@ import typing as t
 from multiprocessing import cpu_count
 
 from . import __version__
-from .util import compute_workitems
-from .ffmpeg import workitem_to_ffmpeg_cmd
+from .ffmpeg import workitem_to_ffmpeg_cmd, compute_workitems
 from .workers import process_workitems
 
 

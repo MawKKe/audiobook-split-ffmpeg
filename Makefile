@@ -37,8 +37,8 @@ build:
 lint:
 	ruff check --output-format=full --statistics --exit-zero
 
-test:
-	pytest --cov=audiobook_split_ffmpeg tests/
+test-pytest:
+	pytest --cov=audiobook_split_ffmpeg tests/ -v
 
 test-mypy:
 	mypy src

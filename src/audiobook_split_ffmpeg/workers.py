@@ -20,19 +20,22 @@ with parallel worker threads/processes.
 import os
 import sys
 from concurrent.futures import (
+    Future,
     ThreadPoolExecutor,
     as_completed,
 )
+import typing as t
+from pathlib import Path
 
 from .ffmpeg import ffmpeg_split_chapter
+from .util import WorkItem
 
 
 def process_workitems(
-    work_items,
-    outdir,
-    concurrency=1,
-    verbose=False,
-):
+        work_items: t.Sequence[WorkItem],
+        outdir: Path,
+        concurrency: int = 1,
+        verbose: bool = False) -> int:
     """
     Runs ffmpeg worker process for each WorkItem, parallellized with ThreadPoolExecutor
     """
@@ -46,7 +49,7 @@ def process_workitems(
     n_jobs = 0
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
 
-        def start_all():
+        def start_all() -> t.Iterator[t.Tuple[Future, WorkItem]]:
             for w_item in work_items:
                 if verbose:
                     print('Submitting job: {}'.format(w_item))
@@ -74,7 +77,7 @@ def process_workitems(
     return 0
 
 
-def _wait_for_results(futs, verbose=False):
+def _wait_for_results(futs: t.Dict[Future, WorkItem], verbose: bool = False) -> t.Dict[str, int]:
     """
     Collect ffmpeg processing results and display whether chapter was processed correctly
     """

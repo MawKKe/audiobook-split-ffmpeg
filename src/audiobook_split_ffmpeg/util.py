@@ -18,6 +18,9 @@ Various utilities for audiobook_split_ffmpeg
 
 import os
 from collections import namedtuple
+import typing as t
+from pathlib import Path
+
 from .ffmpeg import ffprobe_read_chapters
 
 # Helper type for collecting necessary information about chapter for processing
@@ -51,7 +54,7 @@ _CHR_BLACKLIST = [
 ]
 
 
-def _sanitize_string(original):
+def _sanitize_string(original: t.Optional[str]) -> t.Optional[str]:
     """
     Filter typical special letters from string
     """
@@ -60,7 +63,9 @@ def _sanitize_string(original):
     return ''.join(c for c in original if c not in _CHR_BLACKLIST)
 
 
-def _validate_chapter(chap):
+Chapter = t.Dict[str, t.Any]
+
+def _validate_chapter(chap: Chapter) -> t.Optional[Chapter]:
     """
     Checks that chapter is valid (i.e has valid length)
     """
@@ -73,7 +78,7 @@ def _validate_chapter(chap):
     return chap
 
 
-def _get_title_maybe(chap):
+def _get_title_maybe(chap: Chapter) -> t.Optional[str]:
     """
     Chapter to title (string) or None
     """
@@ -83,11 +88,10 @@ def _get_title_maybe(chap):
 
 
 def compute_workitems(
-    infile,
-    outdir,
-    enumerate_files=True,
-    use_title_in_filenames=True,
-):
+        infile: Path,
+        outdir: Path,
+        enumerate_files: bool = True,
+        use_title_in_filenames: bool = True) -> t.Iterator[WorkItem]:
     """
     Compute WorkItem's for each chapter to be processed. These WorkItems can be then used
     for launching ffmpeg processes (see ffmpeg_split_chapter)
@@ -130,7 +134,7 @@ def compute_workitems(
     ch_max = max(chap['id'] + 1 for chap in chapters)
 
     # Produces equal-width zero-padded chapter numbers for use in filenames.
-    def chnum_fmt(n):
+    def chnum_fmt(n: int) -> str:
         return '{n:{fill}{width}}'.format(n=n, fill='0', width=len(str(ch_max)))
 
     for chapter in chapters:

@@ -18,9 +18,12 @@ Utility functionality for interacting with system ffmpeg executables
 
 import json
 import subprocess as sub
+import typing as t
+from pathlib import Path
 
+from audiobook_split_ffmpeg.util import WorkItem
 
-def ffprobe_read_chapters(filename):
+def ffprobe_read_chapters(filename: Path) -> t.Dict[t.Any, t.Any]:
     """
     Read chapter metadata from 'filename' using ffprobe and return it as dict
     """
@@ -28,7 +31,7 @@ def ffprobe_read_chapters(filename):
     command = [
         'ffprobe',
         '-i',
-        filename,
+        str(filename),
         '-v',
         'error',
         '-print_format',
@@ -60,7 +63,7 @@ def ffprobe_read_chapters(filename):
     return data
 
 
-def workitem_to_ffmpeg_cmd(w_item):
+def workitem_to_ffmpeg_cmd(w_item: WorkItem) -> t.List[str]:
     """
     Build command list from WorkItem.
     The command list can be directly passed to subprocess.run() or similar.
@@ -112,7 +115,7 @@ def workitem_to_ffmpeg_cmd(w_item):
     return cmd
 
 
-def ffmpeg_split_chapter(w_item):
+def ffmpeg_split_chapter(w_item: WorkItem) -> t.Dict:
     """
     Split a single chapter using ffmpeg subprocess. Blocks until completion.
 

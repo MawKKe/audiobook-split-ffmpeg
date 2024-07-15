@@ -45,11 +45,11 @@ from .workers import process_workitems
 from .util import compute_workitems
 
 __all__ = [
-    ffprobe_read_chapters,
-    workitem_to_ffmpeg_cmd,
-    ffmpeg_split_chapter,
-    process_workitems,
-    compute_workitems,
+    'ffprobe_read_chapters',
+    'workitem_to_ffmpeg_cmd',
+    'ffmpeg_split_chapter',
+    'process_workitems',
+    'compute_workitems'
 ]
 __author__ = 'Markus Holmström (MawKKe) <markus@mawkke.fi>'
 __version__ = '0.2.0'

@@ -40,4 +40,7 @@ lint:
 test:
 	pytest --cov=audiobook_split_ffmpeg tests/
 
+test-mypy:
+	mypy src
+
 .PHONY: sync-venv pin-requirements build lint test

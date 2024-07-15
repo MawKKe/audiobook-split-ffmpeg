@@ -19,6 +19,7 @@ CLI application implementation for audiobook-split-ffmpeg
 import sys
 import shlex
 import argparse
+import typing as t
 
 from multiprocessing import cpu_count
 
@@ -28,7 +29,7 @@ from .ffmpeg import workitem_to_ffmpeg_cmd
 from .workers import process_workitems
 
 
-def parse_args(argv):
+def parse_args(argv: t.List[str]) -> argparse.Namespace:
     """
     Parse argv into argparse.Namespace
 
@@ -99,7 +100,7 @@ def parse_args(argv):
     return args
 
 
-def _main(args):
+def _main(args: argparse.Namespace) -> int:
     """
     CLI main function for audiobook-split-ffmpeg
 
@@ -141,7 +142,7 @@ def _main(args):
     )
 
 
-def main():
+def main() -> t.NoReturn:
     """
     CLI main function for audiobook-split-ffmpeg
     """

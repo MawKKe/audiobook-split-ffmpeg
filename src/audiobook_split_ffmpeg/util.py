@@ -85,5 +85,3 @@ def _get_title_maybe(chap: Chapter) -> t.Optional[str]:
     if 'tags' not in chap:
         return None
     return chap['tags'].get('title', None)
-
-

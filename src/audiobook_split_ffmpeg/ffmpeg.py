@@ -23,6 +23,7 @@ from pathlib import Path
 
 from audiobook_split_ffmpeg.util import WorkItem
 
+
 def ffprobe_read_chapters(filename: Path) -> t.Dict[t.Any, t.Any]:
     """
     Read chapter metadata from 'filename' using ffprobe and return it as dict

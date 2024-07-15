@@ -65,6 +65,7 @@ def _sanitize_string(original: t.Optional[str]) -> t.Optional[str]:
 
 Chapter = t.Dict[str, t.Any]
 
+
 def _validate_chapter(chap: Chapter) -> t.Optional[Chapter]:
     """
     Checks that chapter is valid (i.e has valid length)
@@ -88,10 +89,8 @@ def _get_title_maybe(chap: Chapter) -> t.Optional[str]:
 
 
 def compute_workitems(
-        infile: Path,
-        outdir: Path,
-        enumerate_files: bool = True,
-        use_title_in_filenames: bool = True) -> t.Iterator[WorkItem]:
+    infile: Path, outdir: Path, enumerate_files: bool = True, use_title_in_filenames: bool = True
+) -> t.Iterator[WorkItem]:
     """
     Compute WorkItem's for each chapter to be processed. These WorkItems can be then used
     for launching ffmpeg processes (see ffmpeg_split_chapter)

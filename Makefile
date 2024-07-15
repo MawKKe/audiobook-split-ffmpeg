@@ -34,6 +34,9 @@ requirements-dev.txt: requirements.txt
 build:
 	pyproject-build
 
+fmt format:
+	ruff format
+
 lint:
 	ruff check --output-format=full --statistics --exit-zero
 

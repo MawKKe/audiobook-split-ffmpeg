@@ -32,10 +32,8 @@ from .util import WorkItem
 
 
 def process_workitems(
-        work_items: t.Sequence[WorkItem],
-        outdir: Path,
-        concurrency: int = 1,
-        verbose: bool = False) -> int:
+    work_items: t.Sequence[WorkItem], outdir: Path, concurrency: int = 1, verbose: bool = False
+) -> int:
     """
     Runs ffmpeg worker process for each WorkItem, parallellized with ThreadPoolExecutor
     """

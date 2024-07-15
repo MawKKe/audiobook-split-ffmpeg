@@ -49,7 +49,7 @@ __all__ = [
     'workitem_to_ffmpeg_cmd',
     'ffmpeg_split_chapter',
     'process_workitems',
-    'compute_workitems'
+    'compute_workitems',
 ]
 __author__ = 'Markus Holmström (MawKKe) <markus@mawkke.fi>'
 __version__ = '0.2.0'

@@ -35,6 +35,9 @@ jobs:
     - name: Run tests with pytest
       run: |
         make test-pytest
+    - name: Run tests with mypy
+      run: |
+        make test-mypy
     - name: Verify main entrypoint script works
       run: |
         python -m venv app-venv && ./app-venv/bin/pip install .

@@ -17,7 +17,11 @@ Various utilities for audiobook_split_ffmpeg
 """
 
 import os
+import datetime
+import typing as t
+import re
 from collections import namedtuple
+
 from .ffmpeg import ffprobe_read_chapters
 
 # Helper type for collecting necessary information about chapter for processing
@@ -158,3 +162,20 @@ def compute_workitems(
             ch_max=ch_max,
             ch_title=_get_title_maybe(chapter),
         )
+
+
+DURATION_PATT = re.compile(r'^(?:(?P<h>[0-9]+)h)?(?:(?P<m>[0-9]+)m)?(?:(?P<s>[0-9]+)s)?$')
+
+def parse_duration(duration_s: str) -> t.Optional[datetime.timedelta]:
+    match = DURATION_PATT.search(duration_s)
+
+    if match is None:
+        return None
+
+    data = match.groupdict()
+
+    return datetime.timedelta(
+        hours=int(data.get('h', 0)),
+        minutes=int(data.get('m', 0)),
+        seconds=int(data.get('s', 0))
+    )

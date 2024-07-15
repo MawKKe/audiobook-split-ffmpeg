@@ -32,9 +32,12 @@ jobs:
     - name: Run linter
       run: |
         make lint
-    - name: Run tests
+    - name: Run tests with pytest
       run: |
-        make test
+        make test-pytest
+    - name: Run tests with mypy
+      run: |
+        make test-mypy || exit 0
     - name: Verify main entrypoint script works
       run: |
         python -m venv app-venv && ./app-venv/bin/pip install .

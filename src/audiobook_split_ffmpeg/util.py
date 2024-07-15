@@ -16,10 +16,8 @@
 Various utilities for audiobook_split_ffmpeg
 """
 
-import os
 from collections import namedtuple
 import typing as t
-from pathlib import Path
 
 
 # Helper type for collecting necessary information about chapter for processing

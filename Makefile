@@ -38,7 +38,7 @@ fmt format:
 	ruff format
 
 lint:
-	ruff check --output-format=full --statistics --exit-zero
+	ruff check --output-format=full
 
 test: test-pytest test-mypy
 

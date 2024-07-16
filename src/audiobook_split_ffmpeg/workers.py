@@ -28,7 +28,7 @@ import typing as t
 from pathlib import Path
 
 from .ffmpeg import ffmpeg_split_chapter
-from .util import WorkItem
+from .model import WorkItem
 
 
 def process_workitems(

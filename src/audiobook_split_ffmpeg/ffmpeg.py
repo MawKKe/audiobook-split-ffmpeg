@@ -22,7 +22,8 @@ import subprocess as sub
 import typing as t
 from pathlib import Path
 
-from .util import WorkItem, _validate_chapter, _sanitize_string, _get_title_maybe
+from .model import WorkItem
+from .util import _validate_chapter, _sanitize_string, _get_title_maybe
 
 
 def ffprobe_read_chapters(filename: Path) -> t.Dict[t.Any, t.Any]:

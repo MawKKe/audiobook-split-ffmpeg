@@ -8,6 +8,10 @@ coverage==7.4.3
     # via pytest-cov
 iniconfig==2.0.0
     # via pytest
+mypy==1.10.1
+    # via audiobook-split-ffmpeg (pyproject.toml)
+mypy-extensions==1.0.0
+    # via mypy
 packaging==23.2
     # via pytest
 pluggy==1.4.0
@@ -20,3 +24,5 @@ pytest-cov==4.1.0
     # via audiobook-split-ffmpeg (pyproject.toml)
 ruff==0.3.2
     # via audiobook-split-ffmpeg (pyproject.toml)
+typing-extensions==4.12.2
+    # via mypy

@@ -34,10 +34,18 @@ requirements-dev.txt: requirements.txt
 build:
 	pyproject-build
 
-lint:
-	ruff check --output-format=full --statistics --exit-zero
+fmt format:
+	ruff format
 
-test:
+lint:
+	ruff check --output-format=full
+
+test: test-pytest test-mypy
+
+test-pytest:
 	pytest --cov=audiobook_split_ffmpeg tests/
+
+test-mypy:
+	mypy src
 
 .PHONY: sync-venv pin-requirements build lint test

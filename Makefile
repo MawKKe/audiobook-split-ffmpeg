@@ -43,7 +43,7 @@ lint:
 test: test-pytest test-mypy
 
 test-pytest:
-	pytest --cov=audiobook_split_ffmpeg tests/
+	pytest --cov=audiobook_split_ffmpeg tests/ -v
 
 test-mypy:
 	mypy src

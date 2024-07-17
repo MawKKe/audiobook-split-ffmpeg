@@ -1,5 +1,9 @@
 import json
 from pathlib import Path
+import typing as t
+import fnmatch
+from itertools import product
+import shlex
 
 from audiobook_split_ffmpeg import (
     ffprobe_read_chapters,
@@ -125,3 +129,102 @@ def test_read_fileinfo():
     info = ffprobe.read_fileinfo(here / 'beep.m4a')
     assert len(info.meta.chapters) == 3
     assert info.path == here / 'beep.m4a'
+
+
+def test_chapter_num_format_padded():
+    assert ffprobe.num_format_padded(0, 1) == '0'
+    assert ffprobe.num_format_padded(1, 2) == '01'
+    assert ffprobe.num_format_padded(2, 3) == '002'
+    assert ffprobe.num_format_padded(69, 3) == '069'
+    assert ffprobe.num_format_padded(1234, 3) == '1234'
+
+
+def find_matching_pairs(
+    haystack: t.List[str], first: str, second: str
+) -> t.Iterator[t.Tuple[str, str]]:
+    """
+    scan list for pair of elements matching 'first' and 'second' (that are possibly globs),
+    yield all matching pairs
+    """
+    for a, b in zip(haystack, haystack[1:]):
+        if fnmatch.fnmatch(a, first) and fnmatch.fnmatch(b, second):
+            yield (a, b)
+
+
+@pytest.fixture(scope='session')
+def beep_info():
+    return ffprobe.read_fileinfo(here / 'beep.m4a')
+
+
+def test_make_ffmpeg_cmd(beep_info):
+    opts = ffprobe.Options()
+    cmd = ffprobe.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
+    expect = [
+        'ffmpeg',
+        '-nostdin',
+        '-i',
+        str((here / 'beep.m4a').resolve()),
+        '-v',
+        'error',
+        '-map_chapters',
+        '-1',
+        '-vn',
+        '-c',
+        'copy',
+        '-ss',
+        '20.000000',
+        '-to',
+        '40.000000',
+        '-n',
+        '-metadata',
+        'track=2/3',
+        '-metadata',
+        'title=All You Can BEEP Buffee',
+        'myout/2 - All You Can BEEP Buffee.m4a',
+    ]
+    assert cmd == expect
+
+
+def test_make_ffmpeg_split_cmd__no_use_title_in_name(beep_info):
+    opts = ffprobe.Options()
+    opts.use_title_in_name = False
+    cmd = ffprobe.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
+    expect = 'myout/2 - beep.m4a'
+    assert cmd[-1] == expect
+
+
+def test_make_ffmpeg_split_cmd__enumeration_offset(beep_info):
+    opts = ffprobe.Options()
+    opts.track_enumeration_offset = 5
+    cmd = ffprobe.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
+    expect = 'myout/6 - All You Can BEEP Buffee.m4a'
+    assert cmd[-1] == expect
+
+
+def test_make_ffmpeg_split_cmd__metadata_handling(beep_info):
+    opts = ffprobe.Options(use_title_in_meta=False)
+    cmd = ffprobe.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
+
+    # output filename should not change
+    assert cmd[-1] == 'myout/2 - All You Can BEEP Buffee.m4a'
+
+    pairs = list(find_matching_pairs(cmd, '-metadata', 'track=*'))
+    assert len(pairs) == 1
+    assert pairs[0] == ('-metadata', 'track=2/3')
+
+    pairs = list(find_matching_pairs(cmd, '-metadata', 'title=*'))
+    assert len(pairs) == 0
+
+
+def test_split_options_combinations(beep_info):
+    results = set()
+    for a, b, c in product([False, True], [False, True], [False, True]):
+        opts = ffprobe.Options(use_title_in_name=a, use_title_in_meta=b, use_track_num_in_meta=c)
+
+        for ch in beep_info.meta.chapters:
+            cmd = ffprobe.make_ffmpeg_split_cmd(beep_info, ch, Path('myout'), opts)
+            results.add(shlex.join(cmd))
+
+    # We don't really care what the values of individual results (ffmpeg cmdlines) are,
+    # we care that they are distinct between the option combinations
+    assert len(results) == 24

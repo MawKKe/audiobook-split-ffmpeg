@@ -33,6 +33,14 @@ class FileInfo:
     meta: Metadata
 
 
+@dataclass
+class Options:
+    use_title_in_name: bool = True
+    use_title_in_meta: bool = True
+    use_track_num_in_meta: bool = True
+    track_enumeration_offset: int = 1
+
+
 class FFProbeError(Exception):
     pass
 
@@ -117,16 +125,76 @@ def read_fileinfo(infile: Path, metadata_encoding: t.Optional[str] = None) -> Fi
     return FileInfo(Path(infile), parse_metadata(meta_content))
 
 
+def num_format_padded(num: int, padded_width: int) -> str:
+    return '{num:{fill}{width}}'.format(num=num, fill='0', width=padded_width)
+
+
+def make_ffmpeg_split_cmd(info: FileInfo, ch: Chapter, outdir: Path, opts: Options) -> t.List[str]:
+    base_cmd = [
+        'ffmpeg',
+        '-nostdin',
+        '-i',
+        str(info.path),
+        '-v',
+        'error',
+        '-map_chapters',
+        '-1',
+        '-vn',
+        '-c',
+        'copy',
+        '-ss',
+        str(ch.start_time),
+        '-to',
+        str(ch.end_time),
+        '-n',
+    ]
+
+    ch_num = ch.id + opts.track_enumeration_offset
+    ch_num_max = info.meta.max_chapter_num() + opts.track_enumeration_offset
+
+    chapter_num_padded = num_format_padded(ch_num, padded_width=len(str(ch_num_max)))
+
+    title = ch.title()
+
+    def get_outfile_stem() -> str:
+        if title and opts.use_title_in_name:
+            return title
+        return info.path.stem
+
+    def get_track_num_meta() -> t.List[str]:
+        if not opts.use_track_num_in_meta:
+            return []
+        return ['-metadata', 'track={}/{}'.format(ch_num, ch_num_max)]
+
+    def get_title_meta() -> t.List[str]:
+        if not (title and opts.use_title_in_meta):
+            return []
+        return ['-metadata', 'title={}'.format(title)]
+
+    outfile_name = f'{chapter_num_padded} - {get_outfile_stem()}'
+    outfile_path = (outdir / outfile_name).with_suffix(info.path.suffix)
+
+    return base_cmd + get_track_num_meta() + get_title_meta() + [str(outfile_path)]
+
+
 if __name__ == '__main__':
     import sys
+    from pprint import pprint as pp
+    import shlex
 
     infile = sys.argv[1]
     encoding = sys.argv[2] if len(sys.argv) > 2 else None
     raw = ffprobe(Path(infile), encoding)
-    print('Raw ffprobe output:')
+    print('>>> Raw ffprobe output and parsed chapters and commands')
     print(raw)
-    print('-' * 10)
+    print()
+
     file_info = read_fileinfo(Path(infile), encoding)
-    print('Fully parsed chapters:')
-    for chap in file_info.meta.chapters:
-        print(chap)
+
+    opts = Options()
+    for ch in file_info.meta.chapters:
+        print(ch)
+        cmd = make_ffmpeg_split_cmd(file_info, ch, Path('out'), opts)
+        print()
+        print(shlex.join(cmd))
+        print('-' * 10)

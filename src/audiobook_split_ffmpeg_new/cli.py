@@ -79,6 +79,10 @@ def inner_main(argv: t.List[str]) -> int:
 
     info = lib.read_fileinfo(args.infile, args.input_encoding)
 
+    if not info.meta.chapters:
+        print('ERROR: input file contains no chapters. Cannot continue', file=sys.stderr)
+        return -1
+
     if args.dump_chapters_and_stop:
         for ch in info.meta.chapters:
             print(ch)

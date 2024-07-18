@@ -4,6 +4,7 @@ import typing as t
 import fnmatch
 from itertools import product
 import shlex
+import subprocess
 
 from audiobook_split_ffmpeg_new import lib, cli
 
@@ -272,3 +273,7 @@ def test_new_main(tmpdir):
         # missing argument '-o'
         args = ['pytest-main', '-i', 'bar.m4a']
         assert cli.inner_main(args) != 0
+
+
+def test_cli_app_works():
+    subprocess.run(['audiobook-split-ffmpeg-ng', '--help'], check=True)

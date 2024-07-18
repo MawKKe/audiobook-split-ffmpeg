@@ -1,3 +1,4 @@
+import sys
 import argparse
 from pathlib import Path
 import typing as t
@@ -98,7 +99,9 @@ def inner_main(argv: t.List[str]) -> int:
     return 0
 
 
-if __name__ == '__main__':
-    import sys
-
+def main() -> t.NoReturn:
     sys.exit(inner_main(sys.argv))
+
+
+if __name__ == '__main__':
+    main()

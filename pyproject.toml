@@ -24,6 +24,7 @@ dev = [
   'pytest-cov>=4.1',
   'mypy>=1.10',
   'pre-commit>=3.5',
+  'pip-tools>=7.4',
 ]
 
 [project.urls]

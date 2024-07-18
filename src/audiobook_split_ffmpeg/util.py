@@ -65,4 +65,4 @@ def _get_title_maybe(chap: model.Chapter) -> t.Optional[str]:
     """
     if 'tags' not in chap:
         return None
-    return chap['tags'].get('title', None)
+    return t.cast(t.Dict[str,str], chap['tags']).get('title', None)

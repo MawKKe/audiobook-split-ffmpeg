@@ -1,18 +1,15 @@
 import json
 import subprocess
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 import typing as t
 
 
 @dataclass
 class Chapter:
     id: int
-    start: int
-    end: int
     start_time: str
     end_time: str
-    time_base: t.Tuple[int, int]
     tags: t.Dict[str, str]
 
     def title(self) -> t.Optional[str]:
@@ -39,6 +36,7 @@ class Options:
     use_title_in_meta: bool = True
     use_track_num_in_meta: bool = True
     track_enumeration_offset: int = 1
+    allow_overwriting_files: bool = True
 
 
 class FFProbeError(Exception):
@@ -75,37 +73,24 @@ def ffprobe(infile: Path, encoding: t.Optional[str] = None) -> str:
         stderr=subprocess.PIPE,
     )
 
-    # .decode() will most likely explode if the ffprobe json output (chapter metadata)
-    # was written with some weird encoding, and even more so if the data contains text in
-    # multiple different text encodings...
-
-    # TODO how does this handle non-ascii/utf8 metadata? # pylint: disable=fixme
-    # https://stackoverflow.com/questions/10009753/python-dealing-with-mixed-encoding-files
     return proc.stdout.decode(encoding or 'utf-8')
 
 
-EXPECT_CHAPTER_KEYS = {'id', 'start', 'start_time', 'end', 'end_time', 'time_base'}
+EXPECTED_CHAPTER_KEYS = set(field.name for field in fields(Chapter)) - {'tags'}
 
 
-def _parse_raw_chapter_dict(chap: t.Dict[str, t.Any]) -> Chapter:
+def parse_chapter_dict(chap: t.Dict[str, t.Any]) -> Chapter:
     have_chap_keys = set(chap.keys())
 
-    if missing := EXPECT_CHAPTER_KEYS - have_chap_keys:
+    if missing := (EXPECTED_CHAPTER_KEYS - have_chap_keys):
         raise FFProbeError(
-            f'Expected chapter to have keys {EXPECT_CHAPTER_KEYS}, got {have_chap_keys} (missing: {missing})'
+            f'Expected chapter to have keys {EXPECTED_CHAPTER_KEYS}, got {have_chap_keys} (missing: {missing})'
         )
-
-    def parse_timebase(base: str) -> t.Tuple[int, int]:
-        a, b = base.split('/')
-        return (int(a), int(b))
 
     return Chapter(
         id=int(chap['id']),
-        start=int(chap['start']),
         start_time=str(chap['start_time']),
-        end=int(chap['end']),
         end_time=str(chap['end_time']),
-        time_base=parse_timebase(chap['time_base']),
         tags=chap.get('tags', {}),
     )
 
@@ -115,7 +100,7 @@ def parse_metadata(content: str) -> Metadata:
 
     chapters = []
     if 'chapters' in data.keys():
-        chapters = [_parse_raw_chapter_dict(entry) for entry in data['chapters']]
+        chapters = [parse_chapter_dict(entry) for entry in data['chapters']]
 
     return Metadata(chapters)
 
@@ -126,6 +111,10 @@ def read_fileinfo(infile: Path, metadata_encoding: t.Optional[str] = None) -> Fi
 
 
 def num_format_padded(num: int, padded_width: int) -> str:
+    """
+    >>> num_format_padded(123, 4)
+    '0123'
+    """
     return '{num:{fill}{width}}'.format(num=num, fill='0', width=padded_width)
 
 
@@ -146,7 +135,7 @@ def make_ffmpeg_split_cmd(info: FileInfo, ch: Chapter, outdir: Path, opts: Optio
         str(ch.start_time),
         '-to',
         str(ch.end_time),
-        '-n',
+        ('-y' if opts.allow_overwriting_files else '-n'),
     ]
 
     ch_num = ch.id + opts.track_enumeration_offset
@@ -161,12 +150,12 @@ def make_ffmpeg_split_cmd(info: FileInfo, ch: Chapter, outdir: Path, opts: Optio
             return title
         return info.path.stem
 
-    def get_track_num_meta() -> t.List[str]:
+    def metadata_track() -> t.List[str]:
         if not opts.use_track_num_in_meta:
             return []
         return ['-metadata', 'track={}/{}'.format(ch_num, ch_num_max)]
 
-    def get_title_meta() -> t.List[str]:
+    def metadata_title() -> t.List[str]:
         if not (title and opts.use_title_in_meta):
             return []
         return ['-metadata', 'title={}'.format(title)]
@@ -174,7 +163,7 @@ def make_ffmpeg_split_cmd(info: FileInfo, ch: Chapter, outdir: Path, opts: Optio
     outfile_name = f'{chapter_num_padded} - {get_outfile_stem()}'
     outfile_path = (outdir / outfile_name).with_suffix(info.path.suffix)
 
-    return base_cmd + get_track_num_meta() + get_title_meta() + [str(outfile_path)]
+    return base_cmd + metadata_title() + metadata_track() + [str(outfile_path)]
 
 
 if __name__ == '__main__':

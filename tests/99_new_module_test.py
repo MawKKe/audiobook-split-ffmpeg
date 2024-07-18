@@ -87,7 +87,7 @@ def test__parse_chapter_dict__accepts_valid_entry(valid_chapter_dict):
     assert 'title' in chap.tags and chap.tags['title'] == 'All You Can BEEP Buffee'
 
 
-def test__parse_chapter_dict__rejects_invalid_entry(valid_chapter_dict):
+def test__parse_chapter_dict__rejects_dict_with_missing_keys(valid_chapter_dict):
     # Any of the required keys causes rejection of the entry
     with pytest.raises(lib.FFProbeError):
         _ = lib.parse_chapter_dict(_internal_drop_key(valid_chapter_dict, 'id'))

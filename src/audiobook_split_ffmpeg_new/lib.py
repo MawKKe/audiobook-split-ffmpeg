@@ -87,6 +87,13 @@ def parse_chapter_dict(chap: t.Dict[str, t.Any]) -> Chapter:
             f'Expected chapter to have keys {EXPECTED_CHAPTER_KEYS}, got {have_chap_keys} (missing: {missing})'
         )
 
+    start = float(chap['start_time'])
+    end = float(chap['end_time'])
+
+    if (end - start) <= 0:
+        # extra validation for just in case
+        raise FFProbeError(f'Invalid start..end time range in {chap}')
+
     return Chapter(
         id=int(chap['id']),
         start_time=str(chap['start_time']),

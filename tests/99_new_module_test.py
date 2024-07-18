@@ -97,6 +97,12 @@ def test__parse_chapter_dict__rejects_dict_with_missing_keys(valid_chapter_dict)
         _ = lib.parse_chapter_dict(_internal_drop_key(valid_chapter_dict, 'end_time'))
 
 
+def test__parse_chapter_dict__rejects_dict_with_nonsense_time_range(valid_chapter_dict):
+    nonsense = {**valid_chapter_dict, **{'start_time': valid_chapter_dict['end_time']}}
+    with pytest.raises(lib.FFProbeError):
+        _ = lib.parse_chapter_dict(nonsense)
+
+
 def test_parse_metadata():
     meta = lib.parse_metadata(_raw_ffprobe_metadata_json)
     assert len(meta.chapters) == 3

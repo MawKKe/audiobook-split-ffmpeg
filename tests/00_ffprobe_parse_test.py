@@ -2,9 +2,9 @@ from audiobook_split_ffmpeg import (
     ffprobe_read_chapters,
 )
 
-from audiobook_split_ffmpeg.model import Chapter
 
 from .testdata import beep, beep_nochap
+
 
 def test_file_with_chapters():
     chapters = ffprobe_read_chapters(beep['file'])

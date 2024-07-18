@@ -168,7 +168,6 @@ def make_ffmpeg_split_cmd(info: FileInfo, ch: Chapter, outdir: Path, opts: Optio
 
 if __name__ == '__main__':
     import sys
-    from pprint import pprint as pp
     import shlex
 
     infile = sys.argv[1]

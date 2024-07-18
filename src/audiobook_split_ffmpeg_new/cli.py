@@ -1,7 +1,6 @@
 import argparse
 from pathlib import Path
 import typing as t
-import shlex
 
 import asyncio
 from multiprocessing import cpu_count
@@ -12,14 +11,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def process(commands: t.List[t.List[str]], max_concurrency: int) -> t.Sequence[t.Optional[int]]:
+
+async def process(
+    commands: t.List[t.List[str]], max_concurrency: int
+) -> t.Sequence[t.Optional[int]]:
     sem = asyncio.Semaphore(max_concurrency)
 
     async def run(cmd: t.List[str], fail: bool = False) -> t.Optional[int]:
         async with sem:
             logger.info('starting: %s', cmd[-1])
             proc = await asyncio.create_subprocess_exec(cmd[0], *cmd[1:])
-            res = await proc.communicate()
+            await proc.wait()
         logger.info('finished: %s', cmd[-1])
         return proc.returncode
 
@@ -27,20 +29,39 @@ async def process(commands: t.List[t.List[str]], max_concurrency: int) -> t.Sequ
 
     return await asyncio.gather(*tasks)
 
+
 def inner_main(argv: t.List[str]) -> int:
     logging.basicConfig(level=logging.INFO)
     p = argparse.ArgumentParser(prog=Path(argv[0]).name)
     p.add_argument('-i', '--infile', type=Path, required=True)
     p.add_argument('-o', '--outdir', type=Path, required=True)
-    p.add_argument('--input-encoding', type=str, help='Parse ffprobe output with this encoding (default: UTF8)')
-    p.add_argument('--no-use-title-in-name', dest='use_title_in_name', action='store_false',
-                   help='Disable using chpater title as output filename stem')
-    p.add_argument('--no-use-title-in-meta', dest='use_title_in_meta', action='store_false',
-                   help='Disable setting chapter title in output metadata')
-    p.add_argument('--no-use-track-num-in-meta', dest='use_tracknum_in_meta', action='store_false',
-                   help='Disable setting track number in output metadata')
-    p.add_argument('--track-num-offset', type=int, default=1,
-                   help='Offset track numbers by this much. Affects both output filename and metadata')
+    p.add_argument(
+        '--input-encoding', type=str, help='Parse ffprobe output with this encoding (default: UTF8)'
+    )
+    p.add_argument(
+        '--no-use-title-in-name',
+        dest='use_title_in_name',
+        action='store_false',
+        help='Disable using chpater title as output filename stem',
+    )
+    p.add_argument(
+        '--no-use-title-in-meta',
+        dest='use_title_in_meta',
+        action='store_false',
+        help='Disable setting chapter title in output metadata',
+    )
+    p.add_argument(
+        '--no-use-track-num-in-meta',
+        dest='use_tracknum_in_meta',
+        action='store_false',
+        help='Disable setting track number in output metadata',
+    )
+    p.add_argument(
+        '--track-num-offset',
+        type=int,
+        default=1,
+        help='Offset track numbers by this much. Affects both output filename and metadata',
+    )
     p.add_argument('--dump-chapters-and-stop', action='store_true')
     p.add_argument('-j', '--max-concurrency', type=int, default=cpu_count())
 
@@ -49,10 +70,10 @@ def inner_main(argv: t.List[str]) -> int:
     args.max_concurrency = 1 if args.max_concurrency < 1 else args.max_concurrency
 
     opts = lib.Options(
-        use_title_in_name = args.use_title_in_name,
-        use_title_in_meta = args.use_title_in_meta,
-        use_track_num_in_meta = args.use_tracknum_in_meta,
-        track_enumeration_offset = args.track_num_offset,
+        use_title_in_name=args.use_title_in_name,
+        use_title_in_meta=args.use_title_in_meta,
+        use_track_num_in_meta=args.use_tracknum_in_meta,
+        track_enumeration_offset=args.track_num_offset,
     )
 
     info = lib.read_fileinfo(args.infile, args.input_encoding)
@@ -76,8 +97,8 @@ def inner_main(argv: t.List[str]) -> int:
 
     return 0
 
+
 if __name__ == '__main__':
     import sys
+
     sys.exit(inner_main(sys.argv))
-
-

@@ -8,10 +8,13 @@ import shlex
 from audiobook_split_ffmpeg_new import lib, cli
 
 import pytest
+
 here = Path(__file__).resolve().parent
+
 
 def _internal_drop_key(data: t.Dict[t.Any, t.Any], key: t.Any) -> t.Dict[t.Any, t.Any]:
     return {k: v for k, v in data.items() if k != key}
+
 
 def test_internal_drop_key():
     assert _internal_drop_key({'a': 1, 'b': 2, 'c': 3}, 'b') == {'a': 1, 'c': 3}
@@ -57,6 +60,7 @@ _raw_ffprobe_metadata_json = """
 }
 """
 
+
 @pytest.fixture(scope='session')
 def valid_chapter_dict() -> t.Dict[str, t.Any]:
     return json.loads("""
@@ -72,6 +76,7 @@ def valid_chapter_dict() -> t.Dict[str, t.Any]:
         }
     }
     """)
+
 
 def test__parse_chapter_dict__accepts_valid_entry(valid_chapter_dict):
     chap = lib.parse_chapter_dict(valid_chapter_dict)
@@ -241,7 +246,7 @@ def test_split_options_combinations(beep_info):
 
 
 def test_new_main(tmpdir):
-    args = ['pytest-main', '-i', str(here/ 'beep.m4a'), '-o', str(tmpdir)]
+    args = ['pytest-main', '-i', str(here / 'beep.m4a'), '-o', str(tmpdir)]
     res = cli.inner_main(args)
     assert res == 0
 

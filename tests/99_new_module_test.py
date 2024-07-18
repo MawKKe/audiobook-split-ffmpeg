@@ -86,6 +86,7 @@ def test__parse_chapter_dict__accepts_valid_entry(valid_chapter_dict):
     assert chap.end_time == '49.654321'
     assert 'title' in chap.tags and chap.tags['title'] == 'All You Can BEEP Buffee'
 
+
 def test__parse_chapter_dict__rejects_invalid_entry(valid_chapter_dict):
     # Any of the required keys causes rejection of the entry
     with pytest.raises(lib.FFProbeError):
@@ -94,6 +95,7 @@ def test__parse_chapter_dict__rejects_invalid_entry(valid_chapter_dict):
         _ = lib.parse_chapter_dict(_internal_drop_key(valid_chapter_dict, 'start_time'))
     with pytest.raises(lib.FFProbeError):
         _ = lib.parse_chapter_dict(_internal_drop_key(valid_chapter_dict, 'end_time'))
+
 
 def test_parse_metadata():
     meta = lib.parse_metadata(_raw_ffprobe_metadata_json)

@@ -5,7 +5,7 @@ import fnmatch
 from itertools import product
 import shlex
 
-from audiobook_split_ffmpeg_new import lib, cli
+from audiobook_split_ffmpeg_new import lib, cli, model
 
 import pytest
 
@@ -80,7 +80,7 @@ def valid_chapter_dict() -> t.Dict[str, t.Any]:
 
 def test__parse_chapter_dict__accepts_valid_entry(valid_chapter_dict):
     chap = lib.parse_chapter_dict(valid_chapter_dict)
-    assert isinstance(chap, lib.Chapter)
+    assert isinstance(chap, model.Chapter)
     assert chap.id == 1
     assert chap.start_time == '29.123456'
     assert chap.end_time == '49.654321'
@@ -107,19 +107,19 @@ def test_parse_metadata():
     meta = lib.parse_metadata(_raw_ffprobe_metadata_json)
     assert len(meta.chapters) == 3
     expect_chapters = [
-        lib.Chapter(
+        model.Chapter(
             id=0,
             start_time='0.000000',
             end_time='20.000000',
             tags={'title': 'It All Started With a Simple BEEP'},
         ),
-        lib.Chapter(
+        model.Chapter(
             id=1,
             start_time='20.000000',
             end_time='40.000000',
             tags={'title': 'All You Can BEEP Buffee'},
         ),
-        lib.Chapter(
+        model.Chapter(
             id=2,
             start_time='40.000000',
             end_time='60.000000',
@@ -180,7 +180,7 @@ def beep_info():
 
 
 def test_make_ffmpeg_cmd(beep_info):
-    opts = lib.Options()
+    opts = model.Options()
     cmd = lib.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
     expect = [
         'ffmpeg',
@@ -209,7 +209,7 @@ def test_make_ffmpeg_cmd(beep_info):
 
 
 def test_make_ffmpeg_split_cmd__no_use_title_in_name(beep_info):
-    opts = lib.Options()
+    opts = model.Options()
     opts.use_title_in_name = False
     cmd = lib.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
     expect = 'myout/2 - beep.m4a'
@@ -217,7 +217,7 @@ def test_make_ffmpeg_split_cmd__no_use_title_in_name(beep_info):
 
 
 def test_make_ffmpeg_split_cmd__enumeration_offset(beep_info):
-    opts = lib.Options()
+    opts = model.Options()
     opts.track_enumeration_offset = 5
     cmd = lib.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
     expect = 'myout/6 - All You Can BEEP Buffee.m4a'
@@ -225,7 +225,7 @@ def test_make_ffmpeg_split_cmd__enumeration_offset(beep_info):
 
 
 def test_make_ffmpeg_split_cmd__metadata_handling(beep_info):
-    opts = lib.Options(use_title_in_meta=False)
+    opts = model.Options(use_title_in_meta=False)
     cmd = lib.make_ffmpeg_split_cmd(beep_info, beep_info.meta.chapters[1], Path('myout'), opts)
 
     # output filename should not change
@@ -242,7 +242,7 @@ def test_make_ffmpeg_split_cmd__metadata_handling(beep_info):
 def test_split_options_combinations(beep_info):
     results = set()
     for a, b, c in product([False, True], [False, True], [False, True]):
-        opts = lib.Options(use_title_in_name=a, use_title_in_meta=b, use_track_num_in_meta=c)
+        opts = model.Options(use_title_in_name=a, use_title_in_meta=b, use_track_num_in_meta=c)
 
         for ch in beep_info.meta.chapters:
             cmd = lib.make_ffmpeg_split_cmd(beep_info, ch, Path('myout'), opts)

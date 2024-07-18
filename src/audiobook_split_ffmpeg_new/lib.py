@@ -1,42 +1,9 @@
 import json
 import subprocess
 from pathlib import Path
-from dataclasses import dataclass, fields
 import typing as t
 
-
-@dataclass
-class Chapter:
-    id: int
-    start_time: str
-    end_time: str
-    tags: t.Dict[str, str]
-
-    def title(self) -> t.Optional[str]:
-        return self.tags.get('title', None)
-
-
-@dataclass
-class Metadata:
-    chapters: t.List[Chapter]
-
-    def max_chapter_num(self) -> int:
-        return max(ch.id for ch in self.chapters)
-
-
-@dataclass
-class FileInfo:
-    path: Path
-    meta: Metadata
-
-
-@dataclass
-class Options:
-    use_title_in_name: bool = True
-    use_title_in_meta: bool = True
-    use_track_num_in_meta: bool = True
-    track_enumeration_offset: int = 1
-    allow_overwriting_files: bool = True
+from . import model
 
 
 class FFProbeError(Exception):
@@ -76,15 +43,12 @@ def ffprobe(infile: Path, encoding: t.Optional[str] = None) -> str:
     return proc.stdout.decode(encoding or 'utf-8')
 
 
-EXPECTED_CHAPTER_KEYS = set(field.name for field in fields(Chapter)) - {'tags'}
-
-
-def parse_chapter_dict(chap: t.Dict[str, t.Any]) -> Chapter:
+def parse_chapter_dict(chap: t.Dict[str, t.Any]) -> model.Chapter:
     have_chap_keys = set(chap.keys())
 
-    if missing := (EXPECTED_CHAPTER_KEYS - have_chap_keys):
+    if missing := (model.EXPECTED_CHAPTER_KEYS - have_chap_keys):
         raise FFProbeError(
-            f'Expected chapter to have keys {EXPECTED_CHAPTER_KEYS}, got {have_chap_keys} (missing: {missing})'
+            f'Expected chapter to have keys {model.EXPECTED_CHAPTER_KEYS}, got {have_chap_keys} (missing: {missing})'
         )
 
     start = float(chap['start_time'])
@@ -94,7 +58,7 @@ def parse_chapter_dict(chap: t.Dict[str, t.Any]) -> Chapter:
         # extra validation for just in case
         raise FFProbeError(f'Invalid start..end time range in {chap}')
 
-    return Chapter(
+    return model.Chapter(
         id=int(chap['id']),
         start_time=str(chap['start_time']),
         end_time=str(chap['end_time']),
@@ -102,19 +66,19 @@ def parse_chapter_dict(chap: t.Dict[str, t.Any]) -> Chapter:
     )
 
 
-def parse_metadata(content: str) -> Metadata:
+def parse_metadata(content: str) -> model.Metadata:
     data = json.loads(content)
 
     chapters = []
     if 'chapters' in data.keys():
         chapters = [parse_chapter_dict(entry) for entry in data['chapters']]
 
-    return Metadata(chapters)
+    return model.Metadata(chapters)
 
 
-def read_fileinfo(infile: Path, metadata_encoding: t.Optional[str] = None) -> FileInfo:
+def read_fileinfo(infile: Path, metadata_encoding: t.Optional[str] = None) -> model.FileInfo:
     meta_content = ffprobe(infile, encoding=metadata_encoding)
-    return FileInfo(Path(infile), parse_metadata(meta_content))
+    return model.FileInfo(Path(infile), parse_metadata(meta_content))
 
 
 def num_format_padded(num: int, padded_width: int) -> str:
@@ -125,7 +89,9 @@ def num_format_padded(num: int, padded_width: int) -> str:
     return '{num:{fill}{width}}'.format(num=num, fill='0', width=padded_width)
 
 
-def make_ffmpeg_split_cmd(info: FileInfo, ch: Chapter, outdir: Path, opts: Options) -> t.List[str]:
+def make_ffmpeg_split_cmd(
+    info: model.FileInfo, ch: model.Chapter, outdir: Path, opts: model.Options
+) -> t.List[str]:
     base_cmd = [
         'ffmpeg',
         '-nostdin',
@@ -186,7 +152,7 @@ if __name__ == '__main__':
 
     file_info = read_fileinfo(Path(infile), encoding)
 
-    opts = Options()
+    opts = model.Options()
     for ch in file_info.meta.chapters:
         print(ch)
         cmd = make_ffmpeg_split_cmd(file_info, ch, Path('out'), opts)

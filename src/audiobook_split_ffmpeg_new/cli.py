@@ -6,7 +6,7 @@ import typing as t
 import asyncio
 from multiprocessing import cpu_count
 
-from audiobook_split_ffmpeg_new import lib
+from audiobook_split_ffmpeg_new import lib, model
 
 import logging
 
@@ -70,7 +70,7 @@ def inner_main(argv: t.List[str]) -> int:
 
     args.max_concurrency = 1 if args.max_concurrency < 1 else args.max_concurrency
 
-    opts = lib.Options(
+    opts = model.Options(
         use_title_in_name=args.use_title_in_name,
         use_title_in_meta=args.use_title_in_meta,
         use_track_num_in_meta=args.use_tracknum_in_meta,

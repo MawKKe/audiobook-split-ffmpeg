@@ -43,7 +43,6 @@ jobs:
         python -m venv app-venv && ./app-venv/bin/pip install .
         ./app-venv/bin/audiobook-split-ffmpeg --help
         ./app-venv/bin/audiobook-split-ffmpeg --infile tests/beep.m4a --outdir _out --verbose
-        ./app-venv/bin/audiobook-split-ffmpeg-ng --help
     - name: Verify main entrypoint script works (rewrite)
       run: |
         python -m venv app-venv && ./app-venv/bin/pip install .

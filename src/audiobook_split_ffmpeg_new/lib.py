@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 import typing as t
 
-from . import model
+import audiobook_split_ffmpeg_new.model as model
 
 
 class FFProbeError(Exception):
@@ -35,10 +35,14 @@ def ffprobe(infile: Path, encoding: t.Optional[str] = None) -> str:
     # an output file will exit with exitcode != 0
     proc = subprocess.run(
         command,
-        check=True,
+        check=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
+
+    if proc.returncode != 0:
+        emsg = proc.stderr.decode(encoding or 'utf8')
+        raise FFProbeError(f'Failed to read metadata with ffprobe: {emsg}')
 
     return proc.stdout.decode(encoding or 'utf-8')
 

@@ -148,6 +148,11 @@ def test_ffprobe():
     assert isinstance(res, dict)
 
 
+def test_ffprobe_on_nonexistent_file():
+    with pytest.raises(lib.FFProbeError):
+        _ = lib.ffprobe(here / 'doesnotexist.m4a')
+
+
 def test_read_fileinfo():
     info = lib.read_fileinfo(here / 'beep.m4a')
     assert len(info.meta.chapters) == 3

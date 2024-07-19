@@ -48,3 +48,6 @@ jobs:
         python -m venv app-venv && ./app-venv/bin/pip install .
         ./app-venv/bin/audiobook-split-ffmpeg-ng --help
         ./app-venv/bin/audiobook-split-ffmpeg-ng --infile tests/beep.m4a --outdir _out
+    - name: Test hatch build
+      run: |
+        make build

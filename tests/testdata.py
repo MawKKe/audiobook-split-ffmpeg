@@ -1,6 +1,6 @@
 import pathlib
 
-from audiobook_split_ffmpeg.util import WorkItem
+from audiobook_split_ffmpeg.model import WorkItem
 
 here = pathlib.Path(__file__).parent.resolve()
 

@@ -44,7 +44,7 @@ which simplifies installing python applications into isolated virtualenvs:
 
     $ pipx install git+https://github.com/MawKKe/audiobook-split-ffmpeg
 
-afterwards, the `audiobook-split-ffmpeg` command should be available via your `PATH`. 
+afterwards, the `audiobook-split-ffmpeg` command should be available via your `PATH`.
 
 Next, see Usage below.
 
@@ -121,4 +121,3 @@ See file `LICENSE` for more information.
 This project is hosted at https://github.com/MawKKe/audiobook-split-ffmpeg
 
 You are welcome to leave bug reports, fixes and feature requests. Thanks!
-

@@ -1,6 +1,6 @@
 [build-system]
-requires = ['setuptools>=61']
-build-backend = 'setuptools.build_meta'
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = 'audiobook-split-ffmpeg'
@@ -14,8 +14,8 @@ readme = 'README.md'
 requires-python = '>=3.8'
 dependencies = []
 
-[tool.setuptools.dynamic]
-version = {attr = "audiobook_split_ffmpeg.__version__"}
+#[template.plugins.default]
+#src-layout = true
 
 [project.optional-dependencies]
 dev = [
@@ -23,7 +23,22 @@ dev = [
   'pytest>=7',
   'pytest-cov>=4.1',
   'mypy>=1.10',
+  'pre-commit>=3.5',
+  'pip-tools>=7.4',
 ]
+
+[tool.hatch.version]
+path = 'src/audiobook_split_ffmpeg/__init__.py'
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+  'src',
+  'tests',
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/audiobook_split_ffmpeg", "src/audiobook_split_ffmpeg_new"]
+
 
 [project.urls]
 homepage = 'https://github.com/MawKKe/audiobook-split-ffmpeg'
@@ -31,10 +46,16 @@ Issues = 'https://github.com/MawKKe/audiobook-split-ffmpeg/issues'
 
 [project.scripts]
 audiobook-split-ffmpeg = 'audiobook_split_ffmpeg.cli:main'
+audiobook-split-ffmpeg-ng = 'audiobook_split_ffmpeg_new.cli:main'
 
 [tool.pytest.ini_options]
 pythonpath = [
   ".", "src",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:",
 ]
 
 [tool.ruff]
@@ -52,6 +73,8 @@ select = ['E4', 'E7', 'E9', 'F', 'C901']
 max-complexity = 10
 
 [tool.mypy]
-#warn_return_any = true
+warn_return_any = true
 warn_unreachable = true
 disallow_untyped_defs = true
+disallow_untyped_calls = true
+disallow_incomplete_defs = true

@@ -16,23 +16,9 @@
 Various utilities for audiobook_split_ffmpeg
 """
 
-from collections import namedtuple
 import typing as t
 
-
-# Helper type for collecting necessary information about chapter for processing
-WorkItem = namedtuple(
-    'WorkItem',
-    [
-        'infile',
-        'outfile',
-        'start',
-        'end',
-        'ch_num',
-        'ch_max',
-        'ch_title',
-    ],
-)
+from . import model
 
 
 # Special characters interpreted specially by most crappy software
@@ -60,10 +46,7 @@ def _sanitize_string(original: t.Optional[str]) -> t.Optional[str]:
     return ''.join(c for c in original if c not in _CHR_BLACKLIST)
 
 
-Chapter = t.Dict[str, t.Any]
-
-
-def _validate_chapter(chap: Chapter) -> t.Optional[Chapter]:
+def _validate_chapter(chap: model.Chapter) -> t.Optional[model.Chapter]:
     """
     Checks that chapter is valid (i.e has valid length)
     """
@@ -76,10 +59,10 @@ def _validate_chapter(chap: Chapter) -> t.Optional[Chapter]:
     return chap
 
 
-def _get_title_maybe(chap: Chapter) -> t.Optional[str]:
+def _get_title_maybe(chap: model.Chapter) -> t.Optional[str]:
     """
     Chapter to title (string) or None
     """
     if 'tags' not in chap:
         return None
-    return chap['tags'].get('title', None)
+    return t.cast(t.Dict[str, str], chap['tags']).get('title', None)

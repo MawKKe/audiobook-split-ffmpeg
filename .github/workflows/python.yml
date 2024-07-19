@@ -28,7 +28,7 @@ jobs:
     - name: Install environment
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -r requirements-dev.txt
+        python -m pip install '.[dev]'
     - name: Run linter
       run: |
         make lint
@@ -43,3 +43,11 @@ jobs:
         python -m venv app-venv && ./app-venv/bin/pip install .
         ./app-venv/bin/audiobook-split-ffmpeg --help
         ./app-venv/bin/audiobook-split-ffmpeg --infile tests/beep.m4a --outdir _out --verbose
+    - name: Verify main entrypoint script works (rewrite)
+      run: |
+        python -m venv app-venv && ./app-venv/bin/pip install .
+        ./app-venv/bin/audiobook-split-ffmpeg-ng --help
+        ./app-venv/bin/audiobook-split-ffmpeg-ng --infile tests/beep.m4a --outdir _out
+    - name: Test hatch build
+      run: |
+        make build

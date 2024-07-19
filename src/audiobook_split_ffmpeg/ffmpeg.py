@@ -22,10 +22,11 @@ import subprocess as sub
 import typing as t
 from pathlib import Path
 
-from .util import WorkItem, _validate_chapter, _sanitize_string, _get_title_maybe
+from .model import WorkItem
+from .util import _validate_chapter, _sanitize_string, _get_title_maybe
 
 
-def ffprobe_read_chapters(filename: Path) -> t.Dict[t.Any, t.Any]:
+def ffprobe_read_chapters(filename: Path) -> t.Dict[str, t.Any]:
     """
     Read chapter metadata from 'filename' using ffprobe and return it as dict
     """
@@ -62,7 +63,7 @@ def ffprobe_read_chapters(filename: Path) -> t.Dict[t.Any, t.Any]:
 
     data = json.loads(output)
 
-    return data
+    return t.cast(t.Dict[str, t.Any], data)
 
 
 def workitem_to_ffmpeg_cmd(w_item: WorkItem) -> t.List[str]:

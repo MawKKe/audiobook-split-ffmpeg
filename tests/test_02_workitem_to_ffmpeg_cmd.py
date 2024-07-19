@@ -1,7 +1,7 @@
 from audiobook_split_ffmpeg import (
     workitem_to_ffmpeg_cmd,
 )
-from audiobook_split_ffmpeg.util import (
+from audiobook_split_ffmpeg.model import (
     WorkItem,
 )
 

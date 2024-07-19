@@ -35,17 +35,26 @@ build:
 	pyproject-build
 
 fmt format:
-	ruff format
+	ruff format -- src tests
 
 lint:
-	ruff check --output-format=full
+	ruff check --output-format=full -- src tests
 
 test: test-pytest test-mypy
 
 test-pytest:
-	pytest --cov=audiobook_split_ffmpeg tests/
+	pytest -v \
+	    --cov=audiobook_split_ffmpeg \
+	    --cov=audiobook_split_ffmpeg_new \
+	    --cov-report=html:out/coverage \
+	    tests/
 
 test-mypy:
-	mypy src
+	mypy -- src
 
 .PHONY: sync-venv pin-requirements build lint test
+
+clean:
+	git clean -fdX src/ tests/
+
+.PHONY: clean

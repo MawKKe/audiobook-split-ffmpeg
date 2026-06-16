@@ -44,7 +44,7 @@ which simplifies installing python applications into isolated virtualenvs:
 
     $ pipx install git+https://github.com/MawKKe/audiobook-split-ffmpeg
 
-afterwards, the `audiobook-split-ffmpeg` command should be available via your `PATH`. 
+afterwards, the `audiobook-split-ffmpeg` command should be available via your `PATH`.
 
 Next, see Usage below.
 
@@ -71,6 +71,14 @@ The default concurrency is equal to the number of cores available. Note that at 
 the concurrency might not increase the throughput. (We specifically instruct `ffmpeg` to NOT perform
 re-encoding, so most of the processing work consists of copying the existing encoded audio data from the
 input file to the output file(s) - this kind of processing is more I/O bounded than CPU-bounded).
+
+You may specify the desired output file format.
+For example, if you need to transcode a video file into a folder containing audio files.
+
+    $ audiobook-split-ffmpeg --infile /path/to/video.mp4 --out-ext mp3
+
+This command will create the directory containing audio files:
+    `/path/to/video/audio_1.mp3`, `/path/to/video/audio_2.mp3`, etc.
 
 # Dependencies
 
@@ -121,4 +129,3 @@ See file `LICENSE` for more information.
 This project is hosted at https://github.com/MawKKe/audiobook-split-ffmpeg
 
 You are welcome to leave bug reports, fixes and feature requests. Thanks!
-

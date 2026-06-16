@@ -16,6 +16,7 @@
 CLI application implementation for audiobook-split-ffmpeg
 """
 
+import os
 import sys
 import shlex
 import argparse
@@ -28,7 +29,7 @@ from .ffmpeg import workitem_to_ffmpeg_cmd, compute_workitems
 from .workers import process_workitems
 
 
-def parse_args(argv: t.List[str]) -> argparse.Namespace:
+def parse_args(argv: t.List[str], mp3_default: bool = False) -> argparse.Namespace:
     """
     Parse argv into argparse.Namespace
 
@@ -37,21 +38,39 @@ def parse_args(argv: t.List[str]) -> argparse.Namespace:
     argv
         a list of strings, usually the value of sys.argv
 
+    mp3_default
+        set default value of out-ext to `mp3`
+
     WARNING:
         If argv is malformed, the process will exit. Avoid using this function in tests.
     """
     parser = argparse.ArgumentParser(
         description='Split audiobook chapters using ffmpeg', epilog=f'version {__version__}'
     )
-    parser.add_argument(
-        '--infile',
-        required=True,
+
+    infile_excl = parser.add_mutually_exclusive_group(required=True)
+    infile_excl.add_argument(
+        'infile_positional',
+        nargs='*',
         help='Input file. Chapter information must be present in file metadata',
     )
+    infile_excl.add_argument(
+        '--infile',
+        nargs='*',
+        help='Input file. Chapter information must be present in file metadata',
+    )
+
     parser.add_argument(
         '--outdir',
-        required=True,
+        required=False,
+        default=None,
         help='Output directory. Created if does not exist yet.',
+    )
+    parser.add_argument(
+        '--out-ext',
+        required=False,
+        default=("mp3" if mp3_default else None),
+        help='New file extension. If conversion to another format is required.',
     )
     parser.add_argument(
         '--concurrency',
@@ -95,6 +114,7 @@ def parse_args(argv: t.List[str]) -> argparse.Namespace:
     )
 
     args = parser.parse_args(argv[1:])
+    args.infile = (args.infile_positional or args.infile)
 
     return args
 
@@ -113,32 +133,54 @@ def _main(args: argparse.Namespace) -> int:
     if args.verbose:
         print('args:', args)
 
-    work_items = list(
-        compute_workitems(
-            args.infile,
-            args.outdir,
-            enumerate_files=args.enumerate_files,
-            use_title_in_filenames=args.use_title,
+    def parse_path(*pathes):
+        for _infile in map(os.path.abspath, pathes):
+            if os.path.isfile(_infile):
+                yield _infile
+            elif os.path.isdir(_infile):
+                yield from parse_path(
+                    *map(lambda p: os.path.join(_infile, p), os.listdir(_infile))
+                )
+            else:
+                raise RuntimeError("No path \"{0}\" was found".format(_infile))
+
+    for infile in parse_path(*args.infile):
+
+        outdir = args.outdir
+        if outdir is None:
+            outdir, _ = os.path.splitext(infile)
+
+        work_items = list(
+            compute_workitems(
+                infile,
+                outdir,
+                enumerate_files=args.enumerate_files,
+                use_title_in_filenames=args.use_title,
+                out_ext=args.out_ext
+            )
         )
-    )
-    if args.verbose:
-        print('Found: {0} chapters to be processed'.format(len(work_items)))
+        if args.verbose:
+            print('Found: {0} chapters to be processed'.format(len(work_items)))
 
-    if args.dry_run:
-        print('# NOTE: dry-run requested')
-        print(shlex.join(['mkdir', '-p', args.outdir]))
-        commands = (workitem_to_ffmpeg_cmd(wi) for wi in work_items)
-        escaped_cmds = (shlex.join(cmd) for cmd in commands)
-        for cmd in escaped_cmds:
-            print(cmd)
-        return 0
+        if args.dry_run:
+            print('# NOTE: dry-run requested')
+            print(shlex.join(['mkdir', '-p', outdir]))
+            commands = (workitem_to_ffmpeg_cmd(wi) for wi in work_items)
+            escaped_cmds = (shlex.join(cmd) for cmd in commands)
+            for cmd in escaped_cmds:
+                print(cmd)
+            return 0
 
-    return process_workitems(
-        work_items,
-        args.outdir,
-        args.concurrency,
-        args.verbose,
-    )
+        return_code = process_workitems(
+            work_items,
+            outdir,
+            args.concurrency,
+            args.verbose,
+        )
+        if return_code != 0:
+            return return_code
+
+    return 0
 
 
 def main() -> t.NoReturn:
@@ -146,6 +188,10 @@ def main() -> t.NoReturn:
     CLI main function for audiobook-split-ffmpeg
     """
     sys.exit(_main(parse_args(sys.argv)))
+
+
+def main_mp3_mode() -> t.NoReturn:
+    sys.exit(_main(parse_args(sys.argv, True)))
 
 
 if __name__ == '__main__':

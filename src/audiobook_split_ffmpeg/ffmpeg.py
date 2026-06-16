@@ -77,6 +77,9 @@ def workitem_to_ffmpeg_cmd(w_item: WorkItem) -> t.List[str]:
     # and/or 'stty sane'.  If corruption still occurs, let me know (email is at
     # the top of the file).
 
+    _, in_ext = os.path.splitext(w_item.infile)
+    _, out_ext = os.path.splitext(w_item.outfile)
+
     base_cmd = [
         'ffmpeg',
         '-nostdin',
@@ -86,9 +89,17 @@ def workitem_to_ffmpeg_cmd(w_item: WorkItem) -> t.List[str]:
         'error',
         '-map_chapters',
         '-1',
-        '-vn',
-        '-c',
-        'copy',
+        '-vn'
+    ]
+
+    if in_ext.lower() == out_ext.lower():
+        # Same format. No conversion needed. Copy the stream.
+        base_cmd += [
+            '-c',
+            'copy'
+        ]
+
+    base_cmd += [
         '-ss',
         w_item.start,
         '-to',
@@ -128,6 +139,10 @@ def ffmpeg_split_chapter(w_item: WorkItem) -> t.Dict:
     # cmd is a a flat list of strings
     cmd = workitem_to_ffmpeg_cmd(w_item)
 
+    _dir = os.path.dirname(w_item.outfile)
+    if not os.path.isdir(_dir):
+        os.makedirs(_dir, exist_ok=True)
+
     try:
         proc = sub.run(
             cmd,
@@ -153,7 +168,11 @@ def ffmpeg_split_chapter(w_item: WorkItem) -> t.Dict:
 
 
 def compute_workitems(
-    infile: Path, outdir: Path, enumerate_files: bool = True, use_title_in_filenames: bool = True
+    infile: Path,
+    outdir: t.Optional[Path] = None,
+    enumerate_files: bool = True,
+    use_title_in_filenames: bool = True,
+    out_ext: t.Optional[str] = None
 ) -> t.Iterator[WorkItem]:
     """
     Compute WorkItem's for each chapter to be processed. These WorkItems can be then used
@@ -164,11 +183,15 @@ def compute_workitems(
     infile
         Path to an audio(book) file. Must contain chapter information in its metadata.
     outdir
-        Path to a directory where chapter files will be written. Must exist already.
+        Path to a directory where chapter files will be written.
+        If the value is `None`, a directory named `infile` (without an extension) will be used.
     enumerate_files
         Include chapter numbers in output filenames?
     use_title_in_filenames
         Include chapter titles in output filenames?
+    out_ext
+        A new file extension, in case conversion to another format is required.
+        If `None`, the extension remains unchanged.
     """
 
     in_root, in_ext = os.path.splitext(os.path.basename(infile))
@@ -178,6 +201,13 @@ def compute_workitems(
 
     # Make sure extension has no leading dots.
     in_ext = in_ext[1:] if in_ext.startswith('.') else in_ext
+    if out_ext:
+        out_ext = out_ext[1:] if out_ext.startswith('.') else out_ext
+    else:
+        out_ext = in_ext
+
+    if outdir is None:
+        outdir, _ = os.path.splitext(infile)
 
     # Get chapter metadata
     info = ffprobe_read_chapters(infile)
@@ -210,11 +240,11 @@ def compute_workitems(
         # Otherwise, use the root part of input filename
         title = title_maybe if (use_title_in_filenames and title_maybe) else in_root
 
-        out_base = '{title}.{ext}'.format(title=title, ext=in_ext)
+        out_base = '{title}.{ext}'.format(title=title, ext=out_ext)
 
         # Prepend chapter number if requested
         if enumerate_files:
-            out_base = '{0} - {1}'.format(chnum_fmt(ch_num), out_base)
+            out_base = '{0}. {1}'.format(chnum_fmt(ch_num), out_base)
 
         yield WorkItem(
             infile=infile,

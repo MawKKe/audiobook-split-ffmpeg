@@ -52,4 +52,4 @@ __all__ = [
     'compute_workitems',
 ]
 __author__ = 'Markus Holmström (MawKKe) <markus@mawkke.fi>'
-__version__ = '0.2.0'
+__version__ = '0.2.5'
